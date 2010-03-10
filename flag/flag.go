@@ -1,14 +1,14 @@
 package main
 
 import (
-  "flag"
-  "fmt"
+	"flag"
+	"fmt"
 )
 
-var ip *int = flag.Int("flagname", 1234, "help message for flagname")
+var code *int = flag.Int("areacode", 716, "some other area code")
 
 func main() {
-  fmt.Printf("Testing out flags!\n");
-  flag.Parse();
-  fmt.Println("ip has value ", *ip);
+	fmt.Printf("Testing out flags!\n")
+	flag.Parse()
+	fmt.Println("areacode has value ", *code)
 }
