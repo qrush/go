@@ -26,7 +26,7 @@ func pop() {
 // Find and evaluate an expression
 func getExpr() float {
 	t1 := getTerm()
-	for (input[0] == "+" || input[0] == "-") {
+	for input[0] == "+" || input[0] == "-" {
 		op := input[0]
 		pop()
 		t2 := getTerm()
@@ -51,7 +51,7 @@ func getTerm() float {
 		} else if f2 != 0 {
 			f1 /= f2
 		} else {
-			doerror("Divide by zero  FFFFFFFUUUUUUUUUuuuuuu......");
+			doerror("Divide by zero  FFFFFFFUUUUUUUUUuuuuuu......")
 		}
 	}
 	return f1
@@ -60,8 +60,8 @@ func getTerm() float {
 // Find and evaluate a factor
 func getFactor() float {
 
-	if digitCheck,_ := regexp.MatchString("[0-9]+(\\.[0-9]+)?", input[0]); digitCheck {
-		res,_ := strconv.Atof(input[0])
+	if digitCheck, _ := regexp.MatchString("[0-9]+(\\.[0-9]+)?", input[0]); digitCheck {
+		res, _ := strconv.Atof(input[0])
 		pop()
 		return res
 	} else if input[0] == "(" {
@@ -74,9 +74,9 @@ func getFactor() float {
 		return res
 	}
 	return 0
-}	
+}
 
 func main() {
-	input =  os.Args[1:]
+	input = os.Args[1:]
 	fmt.Println(getExpr())
 }
