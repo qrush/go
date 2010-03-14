@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function t {
-  EXPR=`eval ./expr $1`
+  EXPR=`eval ./bin/expr $1`
   test $EXPR = $2
   if [ $? = 0 ]
   then
