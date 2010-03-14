@@ -72,11 +72,17 @@ func getFactor() float {
 		}
 		pop()
 		return res
+	} else {
+		doerror(fmt.Sprintf("Misplaced element %s, check syntax", input[0]))
 	}
 	return 0
 }
 
 func main() {
-	input = os.Args[1:]
-	fmt.Println(getExpr())
+	if (len(os.Args) > 1) {
+		input =  os.Args[1:]
+		fmt.Println(getExpr())
+	} else {
+		doerror("Insufficient arguments")
+	}
 }
