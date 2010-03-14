@@ -20,7 +20,7 @@ func doerror(msg string) {
 func pop() {
 	if len(input) > 1 {
 		input = input[1:]
-	}
+	} 
 }
 
 // Find and evaluate an expression
@@ -39,7 +39,7 @@ func getExpr() float {
 	return t1
 }
 
-// Find an evaluate a term
+// Find and evaluate a term
 func getTerm() float {
 	f1 := getFactor()
 	for input[0] == "*" || input[0] == "/" {
@@ -59,7 +59,6 @@ func getTerm() float {
 
 // Find and evaluate a factor
 func getFactor() float {
-
 	if digitCheck, _ := regexp.MatchString("[0-9]+(\\.[0-9]+)?", input[0]); digitCheck {
 		res, _ := strconv.Atof(input[0])
 		pop()
@@ -81,11 +80,7 @@ func getFactor() float {
 func main() {
 	if (len(os.Args) > 1) {
 		input =  os.Args[1:]
-		r := getExpr()
-		if len(input) > 0 {
-			doerror("Syntax error")
-		}
-		fmt.Println(r)
+		fmt.Println(getExpr())
 	} else {
 		doerror("Insufficient arguments")
 	}
