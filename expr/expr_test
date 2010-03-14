@@ -25,3 +25,8 @@ t "40 / \( 8 + 2 \) + \( 10 \* 10 \) - 50" 54
 
 t "42 / 0" "Division by zero"
 t "\( 2 + 3" "No closing parenthesis"
+t "1 \* \* 2" "Misplaced element *, check syntax"
+t "+ 2" "Misplaced element +, check syntax"
+t "1 / 2 /" "Misplaced element /, check syntax"
+t "1 \* 2 \)" "Syntax error"
+t "4 2" "Syntax error"

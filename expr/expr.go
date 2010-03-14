@@ -20,7 +20,7 @@ func doerror(msg string) {
 func pop() {
 	if len(input) > 1 {
 		input = input[1:]
-	} 
+	}
 }
 
 // Find and evaluate an expression
@@ -78,8 +78,8 @@ func getFactor() float {
 }
 
 func main() {
-	if (len(os.Args) > 1) {
-		input =  os.Args[1:]
+	if len(os.Args) > 1 {
+		input = os.Args[1:]
 		fmt.Println(getExpr())
 	} else {
 		doerror("Insufficient arguments")
