@@ -2,7 +2,7 @@
 
 function t {
   EXPR=`eval ./bin/expr $1`
-  test $EXPR = $2
+  test "$EXPR" = "$2"
   if [ $? = 0 ]
   then
     echo "PASS: $1 = $2"
@@ -22,3 +22,6 @@ t "2 + 2.5" 4.5
 t "1.125 \* 8" 9
 t "5 / 2" 2.5
 t "40 / \( 8 + 2 \) + \( 10 \* 10 \) - 50" 54
+
+t "42 / 0" "Division by zero"
+t "\( 2 + 3" "No closing parenthesis"

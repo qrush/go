@@ -51,7 +51,7 @@ func getTerm() float {
 		} else if f2 != 0 {
 			f1 /= f2
 		} else {
-			doerror("Divide by zero  FFFFFFFUUUUUUUUUuuuuuu......")
+			doerror("Division by zero")
 		}
 	}
 	return f1
@@ -68,7 +68,7 @@ func getFactor() float {
 		pop()
 		res := getExpr()
 		if input[0] != ")" {
-			doerror("oh lawd no closing paren")
+			doerror("No closing parenthesis")
 		}
 		pop()
 		return res
