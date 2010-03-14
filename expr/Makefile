@@ -2,6 +2,6 @@ include $(GOROOT)/src/Make.$(GOARCH)
 
 TARG=expr
 GOFILES=\
-        expr2.go
+        expr.go
 
 include $(GOROOT)/src/Make.cmd

@@ -20,10 +20,8 @@ func pop() {
 	}
 }
 
-func getExpr() int {
+func getExpr() float {
 	t1 := getTerm()
-	fmt.Println(t1)
-	fmt.Println(input)
 	for (input[0] == "+" || input[0] == "-") {
 		op := input[0]
 		pop()
@@ -37,7 +35,7 @@ func getExpr() int {
 	return t1
 }
 
-func getTerm() int {
+func getTerm() float {
 	f1 := getFactor()
 	for input[0] == "*" || input[0] == "/" {
 		op := input[0]
@@ -54,10 +52,10 @@ func getTerm() int {
 	return f1
 }
 
-func getFactor() int {
+func getFactor() float {
 
-	if digitCheck,_ := regexp.MatchString("[0-9]+", input[0]); digitCheck {
-		res,_ := strconv.Atoi(input[0])
+	if digitCheck,_ := regexp.MatchString("[0-9]+(\\.[0-9]+)?", input[0]); digitCheck {
+		res,_ := strconv.Atof(input[0])
 		pop()
 		return res
 	} else if input[0] == "(" {
@@ -66,6 +64,7 @@ func getFactor() int {
 		if input[0] != ")" {
 			doerror("oh lawd no closing paren")
 		}
+		pop()
 		return res
 	}
 	return 0
