@@ -81,7 +81,11 @@ func getFactor() float {
 func main() {
 	if (len(os.Args) > 1) {
 		input =  os.Args[1:]
-		fmt.Println(getExpr())
+		r := getExpr()
+		if len(input) > 0 {
+			doerror("Syntax error")
+		}
+		fmt.Println(r)
 	} else {
 		doerror("Insufficient arguments")
 	}
