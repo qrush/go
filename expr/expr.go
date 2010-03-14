@@ -7,19 +7,23 @@ import (
 	"strconv"
 )
 
+// The array of arguments, excluding the command name
 var input []string
 
+// Print an error and exit
 func doerror(msg string) {
 	fmt.Println(msg)
 	os.Exit(1)
 }
 
+// Remove the current first argument from the list
 func pop() {
 	if len(input) > 1 {
 		input = input[1:]
 	}
 }
 
+// Find and evaluate an expression
 func getExpr() float {
 	t1 := getTerm()
 	for (input[0] == "+" || input[0] == "-") {
@@ -35,6 +39,7 @@ func getExpr() float {
 	return t1
 }
 
+// Find an evaluate a term
 func getTerm() float {
 	f1 := getFactor()
 	for input[0] == "*" || input[0] == "/" {
@@ -52,6 +57,7 @@ func getTerm() float {
 	return f1
 }
 
+// Find and evaluate a factor
 func getFactor() float {
 
 	if digitCheck,_ := regexp.MatchString("[0-9]+(\\.[0-9]+)?", input[0]); digitCheck {
