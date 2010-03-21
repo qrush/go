@@ -1,16 +1,13 @@
-package main
+package ls
 
-import (
-	"fmt"
-	"io/ioutil"
-	"strings"
+type (
+	// Scanner function, must return next token or false.
+	// Advance past next token if argument is true.
+	Scanner func(bool) (string, bool)
+
+	// Parser function
+	Parser func(Scanner) Eval
+
+	// Interpreter function; returns value or os.Error.
+	Eval func() interface{}
 )
-
-func main() {
-	bytes, _ := ioutil.ReadFile("example1.ls")
-	strs := strings.Fields(string(bytes))
-
-	for _, str := range strs {
-		fmt.Println(str)
-	}
-}

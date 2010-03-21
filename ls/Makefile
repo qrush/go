@@ -1,8 +1,8 @@
 include $(GOROOT)/src/Make.$(GOARCH)
 
 TARG=bin/ls
-GOFILES=\
-        ls.go
+GOFILES=main.go
+				#ls.go
 
 include $(GOROOT)/src/Make.cmd
 
