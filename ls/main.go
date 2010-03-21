@@ -24,8 +24,6 @@ type (
 	}
 )
 
-var strs []string
-
 func makeArr(f func(), funcs []func()) []func() {
 	newFuncs := make([]func(), len(funcs)+1)
 	newFuncs[0] = f
@@ -35,9 +33,9 @@ func makeArr(f func(), funcs []func()) []func() {
 	return newFuncs
 }
 
-func name(c Node) func() { return func() { fmt.Println(c.Name) } }
+func name(c Node) func() { return func() { fmt.Printf("%s", c.Name) } }
 
-func nl() func() { return func() { fmt.Println("\n") } }
+func nl() func() { return func() { fmt.Println() } }
 
 func Expr(c Node, next Scanner) []func() {
 	nt, _ := next(true)
@@ -56,8 +54,6 @@ func Expr(c Node, next Scanner) []func() {
 
 func main() {
 	bytes, _ := ioutil.ReadFile("example2.ls")
-	arg := 0 // consider os.Args[++arg] next
-
 	dname := "."
 	fpt, _ := os.Open(dname, os.O_RDONLY, 0666)
 	names, _ := fpt.Readdirnames(-1)
@@ -68,8 +64,8 @@ func main() {
 	}
 
 	for _, node := range nodes {
-		arg = 0
-		strs = strings.Fields(string(bytes))
+		arg := 0
+		strs := strings.Fields(string(bytes))
 		scanner := func(use bool) (string, bool) {
 			switch {
 			case arg >= len(strs):
