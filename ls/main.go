@@ -19,12 +19,12 @@ type (
 	Eval func() interface{}
 
 	Node struct {
-		Name      string
-		Directory *os.Dir
+		Name string
+		Dir  *os.Dir
 	}
 )
 
-var strs string
+var strs []string
 
 func makeArr(f func(), funcs []func()) []func() {
 	newFuncs := make([]func(), len(funcs)+1)
@@ -56,32 +56,35 @@ func Expr(c Node, next Scanner) []func() {
 
 func main() {
 	bytes, _ := ioutil.ReadFile("example2.ls")
-	strs := strings.Fields(string(bytes))
-
 	arg := 0 // consider os.Args[++arg] next
 
-	node := new(Node)
-	node.Name = "lolz"
-	node.Directory, _ = os.Stat(".")
+	dname := "."
+	fpt, _ := os.Open(dname, os.O_RDONLY, 0666)
+	names, _ := fpt.Readdirnames(-1)
+	nodes := make([]Node, len(names))
+	for i, cn := range names {
+		nodes[i].Name = cn
+		nodes[i].Dir, _ = os.Stat(cn)
+	}
 
-	result := Expr(*node, func(use bool) (string, bool) {
-		switch {
-		case arg >= len(strs):
-			return "", false
-		case use:
-			ret := strs[arg]
-			arg++
-			return ret, true
+	for _, node := range nodes {
+		arg = 0
+		strs = strings.Fields(string(bytes))
+		scanner := func(use bool) (string, bool) {
+			switch {
+			case arg >= len(strs):
+				return "", false
+			case use:
+				ret := strs[arg]
+				arg++
+				return ret, true
+			}
+			return strs[arg], true
 		}
-		return strs[arg], true
-	})
 
-	//for _, str := range strs {
-	fmt.Println(strs)
-	fmt.Println(result)
-	//}
-
-	for fn := range result {
-		result[fn]()
+		result := Expr(node, scanner)
+		for _, fn := range result {
+			fn()
+		}
 	}
 }
