@@ -27,13 +27,13 @@ func compose(f func(), funcs []func()) []func() {
 	return newFuncs
 }
 
-func name(c Node) func() { return func() { fmt.Printf("%s", c.Name) } }
+func name(n Node) func() { return func() { fmt.Printf("%s", n.Name) } }
 
 func nl() func() { return func() { fmt.Println() } }
 
-func file(c Node, funcs []func()) func() {
+func file(n Node, funcs []func()) func() {
 	return func() {
-		if c.Dir.IsRegular() {
+		if n.Dir.IsRegular() {
 			for _, fn := range funcs {
 				fn()
 			}
@@ -41,17 +41,29 @@ func file(c Node, funcs []func()) func() {
 	}
 }
 
-func Expr(c Node, next Scanner) []func() {
+func dir(n Node, funcs []func()) func() {
+	return func() {
+		if n.Dir.IsDirectory() {
+			for _, fn := range funcs {
+				fn()
+			}
+		}
+	}
+}
+
+func Expr(n Node, next Scanner) []func() {
 	nt, _ := next(true)
 	switch nt {
 	case "(":
-		return Expr(c, next)
+		return Expr(n, next)
 	case "(file":
-		return compose(file(c, Expr(c, next)), Expr(c, next))
+		return compose(file(n, Expr(n, next)), Expr(n, next))
+	case "(dir":
+		return compose(dir(n, Expr(n, next)), Expr(n, next))
 	case "(name)":
-		return compose(name(c), Expr(c, next))
+		return compose(name(n), Expr(n, next))
 	case "(nl)":
-		return compose(nl(), Expr(c, next))
+		return compose(nl(), Expr(n, next))
 	case ")":
 		return []func(){}
 	}

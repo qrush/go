@@ -1,1 +1,4 @@
-( (file (name) (nl) ) )
+(
+  (file (name) (nl) )
+  (dir (nl) (name) (nl) (nl) )
+)
