@@ -12,19 +12,13 @@ type (
 	// Advance past next token if argument is true.
 	Scanner func(bool) (string, bool)
 
-	// Parser function
-	Parser func(Scanner) Eval
-
-	// Interpreter function; returns value or os.Error.
-	Eval func() interface{}
-
 	Node struct {
 		Name string
 		Dir  *os.Dir
 	}
 )
 
-func makeArr(f func(), funcs []func()) []func() {
+func compose(f func(), funcs []func()) []func() {
 	newFuncs := make([]func(), len(funcs)+1)
 	newFuncs[0] = f
 	for i := range funcs {
@@ -37,15 +31,27 @@ func name(c Node) func() { return func() { fmt.Printf("%s", c.Name) } }
 
 func nl() func() { return func() { fmt.Println() } }
 
+func file(c Node, funcs []func()) func() {
+	return func() {
+		if c.Dir.IsRegular() {
+			for _, fn := range funcs {
+				fn()
+			}
+		}
+	}
+}
+
 func Expr(c Node, next Scanner) []func() {
 	nt, _ := next(true)
 	switch nt {
 	case "(":
 		return Expr(c, next)
+	case "(file":
+		return compose(file(c, Expr(c, next)), Expr(c, next))
 	case "(name)":
-		return makeArr(name(c), Expr(c, next))
+		return compose(name(c), Expr(c, next))
 	case "(nl)":
-		return makeArr(nl(), Expr(c, next))
+		return compose(nl(), Expr(c, next))
 	case ")":
 		return []func(){}
 	}
