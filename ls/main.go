@@ -142,6 +142,11 @@ func Expr(n Node, next Scanner, norecurse bool) []func() {
 		return compose(nl(), Expr(n, next, norecurse))
 	case ")":
 		return []func(){}
+	default:
+		ftmp := func() {
+			fmt.Printf(nt)
+		}
+		return compose(ftmp, Expr(n, next, norecurse))
 	}
 	return nil
 }

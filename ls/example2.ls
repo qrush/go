@@ -1,6 +1,6 @@
  ( (file (name) (nl) )
     (dir
-	(name) (nl)
+	(nl) (name) : (nl)
 	(sub (file (name) (nl) ) )
 	(sub (dir (name) (nl) ) )
 	(sub (dir (recurse) ) )
