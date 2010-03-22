@@ -54,8 +54,7 @@ func file(n Node, funcs []func()) func() {
 	}
 }
 
-func dir(n Node, funcs []func()) []func() {
-/*
+func dir(n Node, funcs []func()) func() {
 	return func() {
 		if n.Dir.IsDirectory() {
 			for _, fn := range funcs {
@@ -63,11 +62,12 @@ func dir(n Node, funcs []func()) []func() {
 			}
 		}
 	}
-*/
+/*
 	if n.Dir.IsDirectory() {
 		return funcs
 	}
 	return []func() {}
+*/
 }
 
 func subNodes(n Node) []Node {
@@ -85,8 +85,7 @@ func subNodes(n Node) []Node {
 	return []Node {}
 }
 
-func sub(n Node, funcs []func()) []func() {
-/*
+func sub(n Node, funcs []func()) func() {
 	return func() {
 		if n.Dir.IsDirectory() {
 			for _, fn := range funcs {
@@ -94,29 +93,28 @@ func sub(n Node, funcs []func()) []func() {
 			}
 		}
 	}
-*/
+/*
 	if n.Dir.IsDirectory() {
 		return funcs
 	} 
 	return []func() {}
+*/
 }
 
 
 func Expr(n Node, next Scanner) []func() {
 	nt, _, arg := next(true)
-	//fmt.Println(nt)
 	switch nt {
 	case "(":
 		return Expr(n, next)
 	case "(file":
 		return compose(file(n, Expr(n, next)), Expr(n, next))
 	case "(dir":
-		//fmt.Println("Found (dir")
 		if !(n.Dir.IsDirectory()) {
 			Expr(n, next)
 			return []func() {}
 		}
-		return compose2(dir(n, Expr(n, next)), Expr(n, next))
+		return compose(dir(n, Expr(n, next)), Expr(n, next))
 	case "(sub":
 		subfuncs := []func() {}
 		subs := subNodes(n)
@@ -134,19 +132,15 @@ func Expr(n Node, next Scanner) []func() {
 				}
 				return strs[arg2], true, arg2
 			}
-			subfuncs = compose2(sub(n, Expr(subs[i], tscan)), subfuncs)
+			subfuncs = compose(sub(n, Expr(subs[i], tscan)), subfuncs)
 		}
-		//if n.Dir.IsRegular() {
-			Expr(n, next)
-		//}
+		Expr(n, next)
 		return compose2(subfuncs, Expr(n, next))
 	case "(name)":
-		//fmt.Println("Found (name)")
 		return compose(name(n), Expr(n, next))
 	case "(nl)":
 		return compose(nl(), Expr(n, next))
 	case ")":
-		//fmt.Println("Found )")
 		return []func(){}
 	}
 	return nil
