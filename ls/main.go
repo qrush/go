@@ -65,19 +65,28 @@ func dir(n Node, funcs []func()) func() {
 	}
 }
 
-func subNodes(n Node) []Node {
+func subNodes(n Node) ([]Node, os.Error) {
 	if (n.Dir.IsDirectory()) {
-		fpt, _ := os.Open(n.Name, os.O_RDONLY, 0666)
-		names, _ := fpt.Readdirnames(-1)
+		fpt, err := os.Open(n.Name, os.O_RDONLY, 0666)
+		if err != nil {
+			return []Node{}, err
+		}
+		names, err2 := fpt.Readdirnames(-1)
+		if err2 != nil {
+			return []Node{}, err2
+		}
 		nodes := make([]Node, len(names))
 		for i, cn := range names {
 			nodes[i].Name = n.Name + "/" + cn
-			nodes[i].Dir, _ = os.Stat(nodes[i].Name)
+			nodes[i].Dir, err = os.Stat(nodes[i].Name)
+			if err != nil {
+				return []Node{}, err
+			}
 			//fmt.Printf("Filename: %s, parent dir: %s\n", nodes[i].Name, n.Name)
 		}
-		return nodes
+		return nodes, nil
 	} 
-	return []Node {}
+	return []Node {}, nil
 }
 
 func sub(n Node, funcs []func()) func() {
@@ -90,9 +99,18 @@ func sub(n Node, funcs []func()) func() {
 	}
 }
 
+func printerr(s string) func() {
+	return func() {
+		fmt.Println(s)
+	}
+}
 
 func Expr(n Node, next Scanner, norecurse bool) []func() {
-	nt, _, arg := next(true)
+	nt, ok, arg := next(true)
+	if _, ok2, _ := next(false); !ok2 || !ok {
+		fmt.Println("syntax error")
+		os.Exit(1)
+	}
 	switch nt {
 	case "(":
 		return Expr(n, next, norecurse)
@@ -111,7 +129,12 @@ func Expr(n Node, next Scanner, norecurse bool) []func() {
 		return compose(dir(n, Expr(n, next, norecurse)), Expr(n, next, norecurse))
 	case "(sub":
 		subfuncs := []func() {}
-		n.Subs = subNodes(n)
+		var err os.Error
+		n.Subs, err = subNodes(n)
+		if err != nil {
+			Expr(n, next, true)
+			return compose(printerr("Cannot get contents of " + n.Name), Expr(n, next, norecurse))
+		}
 		strs := strings.Fields(string(bytes))
 		for i, _ := range n.Subs {
 			arg2 := arg
@@ -168,27 +191,20 @@ func doRecurse(n Node) []func() {
 
 	result := Expr(n, scanner, false)
 	return result
-/*
-	for _, fn := range result {
-		fn()
-	}
-*/
 }
 
 func main() {
 	bytes, _ = ioutil.ReadFile("example2.ls")
 	dname := os.Args[1]
-	fpt, _ := os.Open(dname, os.O_RDONLY, 0666)
-	names, _ := fpt.Readdirnames(-1)
-	nodes := make([]Node, len(names))
-	for i, cn := range names {
-		nodes[i].Name = cn
-		nodes[i].Dir, _ = os.Stat(cn)
-	}
 
+	var err os.Error
 	node := new(Node)
 	node.Name = dname
-	node.Dir,_ = os.Stat(dname)
+	node.Dir,err = os.Stat(dname)
+	if err != nil {
+		fmt.Println("Couldn't stat " + dname)
+		os.Exit(1)
+	}
 
 	arg := 0
 	strs := strings.Fields(string(bytes))
@@ -208,27 +224,4 @@ func main() {
 	for _, fn := range result {
 		fn()
 	}
-
-/*
-	for _, node := range nodes {
-		arg := 0
-		strs := strings.Fields(string(bytes))
-		scanner := func(use bool) (string, bool, int) {
-			switch {
-			case arg >= len(strs):
-				return "", false, arg
-			case use:
-				ret := strs[arg]
-				arg++
-				return ret, true, arg
-			}
-			return strs[arg], true, arg
-		}
-
-		result := Expr(node, scanner)
-		for _, fn := range result {
-			fn()
-		}
-	}
-*/
 }
