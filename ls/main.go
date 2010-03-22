@@ -15,6 +15,7 @@ type (
 	Node struct {
 		Name string
 		Dir  *os.Dir
+		Subs []Node
 	}
 )
 
@@ -62,12 +63,6 @@ func dir(n Node, funcs []func()) func() {
 			}
 		}
 	}
-/*
-	if n.Dir.IsDirectory() {
-		return funcs
-	}
-	return []func() {}
-*/
 }
 
 func subNodes(n Node) []Node {
@@ -93,33 +88,32 @@ func sub(n Node, funcs []func()) func() {
 			}
 		}
 	}
-/*
-	if n.Dir.IsDirectory() {
-		return funcs
-	} 
-	return []func() {}
-*/
 }
 
 
-func Expr(n Node, next Scanner) []func() {
+func Expr(n Node, next Scanner, norecurse bool) []func() {
 	nt, _, arg := next(true)
 	switch nt {
 	case "(":
-		return Expr(n, next)
+		return Expr(n, next, norecurse)
 	case "(file":
-		return compose(file(n, Expr(n, next)), Expr(n, next))
+		if !(n.Dir.IsRegular()) {
+			Expr(n, next, true)
+			return Expr(n, next, norecurse)
+		}
+		return compose(file(n, Expr(n, next, norecurse)), Expr(n, next, norecurse))
 	case "(dir":
 		if !(n.Dir.IsDirectory()) {
-			Expr(n, next)
+			Expr(n, next, true)
+			//return Expr(n, next, norecurse)
 			return []func() {}
 		}
-		return compose(dir(n, Expr(n, next)), Expr(n, next))
+		return compose(dir(n, Expr(n, next, norecurse)), Expr(n, next, norecurse))
 	case "(sub":
 		subfuncs := []func() {}
-		subs := subNodes(n)
+		n.Subs = subNodes(n)
 		strs := strings.Fields(string(bytes))
-		for i, _ := range subs {
+		for i, _ := range n.Subs {
 			arg2 := arg
 			tscan := func(use bool) (string, bool, int) {
 				switch {
@@ -132,23 +126,53 @@ func Expr(n Node, next Scanner) []func() {
 				}
 				return strs[arg2], true, arg2
 			}
-			subfuncs = compose(sub(n, Expr(subs[i], tscan)), subfuncs)
+			subfuncs = compose(sub(n, Expr(n.Subs[i], tscan, norecurse)), subfuncs)
 		}
-		Expr(n, next)
-		return compose2(subfuncs, Expr(n, next))
+		Expr(n, next, true)
+		return compose2(subfuncs, Expr(n, next, norecurse))
+	case "(recurse)":
+		if norecurse {
+			return []func() {}
+		}
+		ret := compose2(doRecurse(n), Expr(n, next, norecurse))
+		return ret
 	case "(name)":
-		return compose(name(n), Expr(n, next))
+		return compose(name(n), Expr(n, next, norecurse))
 	case "(nl)":
-		return compose(nl(), Expr(n, next))
+		return compose(nl(), Expr(n, next, norecurse))
 	case ")":
 		return []func(){}
 	}
 	return nil
 }
 
+func doRecurse(n Node) []func() {
+	arg := 0
+	strs := strings.Fields(string(bytes))
+	scanner := func(use bool) (string, bool, int) {
+		switch {
+		case arg >= len(strs):
+			return "", false, arg
+		case use:
+			ret := strs[arg]
+			arg++
+			return ret, true, arg
+		}
+		return strs[arg], true, arg
+	}
+
+	result := Expr(n, scanner, false)
+	return result
+/*
+	for _, fn := range result {
+		fn()
+	}
+*/
+}
+
 func main() {
 	bytes, _ = ioutil.ReadFile("example2.ls")
-	dname := "."
+	dname := os.Args[1]
 	fpt, _ := os.Open(dname, os.O_RDONLY, 0666)
 	names, _ := fpt.Readdirnames(-1)
 	nodes := make([]Node, len(names))
@@ -157,6 +181,30 @@ func main() {
 		nodes[i].Dir, _ = os.Stat(cn)
 	}
 
+	node := new(Node)
+	node.Name = dname
+	node.Dir,_ = os.Stat(dname)
+
+	arg := 0
+	strs := strings.Fields(string(bytes))
+	scanner := func(use bool) (string, bool, int) {
+		switch {
+		case arg >= len(strs):
+			return "", false, arg
+		case use:
+			ret := strs[arg]
+			arg++
+			return ret, true, arg
+		}
+		return strs[arg], true, arg
+	}
+
+	result := Expr(*node, scanner, false)
+	for _, fn := range result {
+		fn()
+	}
+
+/*
 	for _, node := range nodes {
 		arg := 0
 		strs := strings.Fields(string(bytes))
@@ -177,4 +225,5 @@ func main() {
 			fn()
 		}
 	}
+*/
 }
