@@ -188,8 +188,13 @@ func doRecurse(n Node) []func() {
 }
 
 func main() {
-	bytes, _ = ioutil.ReadFile("example2.ls")
+	if len(os.Args) != 3 {
+		fmt.Println("Usage: ls [directory] [script.ls]")
+		os.Exit(1)
+	}
+
 	dname := os.Args[1]
+	bytes, _ = ioutil.ReadFile(os.Args[2])
 
 	var err os.Error
 	node := new(Node)
