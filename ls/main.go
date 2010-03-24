@@ -119,8 +119,13 @@ func doRecurse(n Node) []func() {
 // Print the name of the file
 func name(n Node) func() { return func() { fmt.Printf("%s", n.Name) } }
 
-// Print a newline
-func nl() func() { return func() { fmt.Println() } }
+// Return a function which prints out the given string
+func print(s string) func() { return func() { fmt.Println(s) } }
+
+// Return a function which prints out the given string and format
+func printf(f string, a ...interface{}) func() {
+	return func() { fmt.Printf(f, a) }
+}
 
 // Print the node's size in human-readable format
 func humansize(n Node) func() {
@@ -173,9 +178,6 @@ func sub(n Node, funcs []func()) func() {
 	}
 }
 
-// Return a function which prints out an error
-func printstr(s string) func() { return func() { fmt.Println(s) } }
-
 ///////////////////////////////////////////////////////////////////////////////
 // Expression Parser
 // n is a file or directory
@@ -213,7 +215,7 @@ func Expr(n Node, next Scanner, norecurse bool) []func() {
 		n.Subs, err = subNodes(n)
 		if err != nil {
 			Expr(n, next, true)
-			return compose(printstr(fmt.Sprintf("Cannot get contents of %v, error = %v", n.Name, err)), Expr(n, next, norecurse))
+			return compose(printf("Cannot get contents of %v, error = %v", n.Name, err), Expr(n, next, norecurse))
 		}
 		strs := strings.Fields(string(bytes))
 		for i, _ := range n.Subs {
@@ -241,27 +243,24 @@ func Expr(n Node, next Scanner, norecurse bool) []func() {
 		ret := join(doRecurse(n), Expr(n, next, norecurse))
 		return ret
 	case "(tab)":
-		return compose(printstr("	"), Expr(n, next, norecurse))
+		return compose(print("	"), Expr(n, next, norecurse))
 	case "(name)":
 		return compose(name(n), Expr(n, next, norecurse))
 	case "(user)":
-		ftmp := func() { fmt.Printf("%d", n.Dir.Uid) }
-		return compose(ftmp, Expr(n, next, norecurse))
+		return compose(printf("%d", n.Dir.Uid), Expr(n, next, norecurse))
 	case "(group)":
-		ftmp := func() { fmt.Printf("%d", n.Dir.Gid) }
-		return compose(ftmp, Expr(n, next, norecurse))
+		return compose(printf("%d", n.Dir.Gid), Expr(n, next, norecurse))
 	case "(size)":
-		ftmp := func() { fmt.Printf("%d", n.Dir.Size) }
-		return compose(ftmp, Expr(n, next, norecurse))
+		return compose(printf("%d", n.Dir.Size), Expr(n, next, norecurse))
 	case "(human_size)":
 		return compose(humansize(n), Expr(n, next, norecurse))
 	case "(nl)":
-		return compose(nl(), Expr(n, next, norecurse))
+		return compose(print(""), Expr(n, next, norecurse))
 	case ")":
 		return []func(){}
 	default:
 		// By default, we print all un-recognized items
-		return compose(printstr(nt), Expr(n, next, norecurse))
+		return compose(print(nt), Expr(n, next, norecurse))
 	}
 	return nil
 }
