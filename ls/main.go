@@ -20,7 +20,12 @@ type (
 )
 
 // contents of the script file
-var bytes []byte
+var (
+	bytes      []byte
+	a_kilobyte uint64 = 1024
+	a_megabyte uint64 = a_kilobyte * 1024
+	a_gigabyte uint64 = a_megabyte * 1024
+)
 
 // Stick a function at the start of an array of functions
 func compose(f func(), funcs []func()) []func() {
@@ -53,14 +58,14 @@ func nl() func() { return func() { fmt.Println() } }
 // Print the node's size in human-readable format
 func humansize(n Node) func() {
 	return func() {
-		if n.Dir.Size < 1024 {
+		if n.Dir.Size < a_kilobyte {
 			fmt.Printf("%v B", n.Dir.Size)
-		} else if n.Dir.Size < 1024*1024 {
-			fmt.Printf("%v KB", n.Dir.Size/1024)
-		} else if n.Dir.Size < 1024*1024*1024 {
-			fmt.Printf("%v MB", n.Dir.Size/(1024*1024))
+		} else if n.Dir.Size < a_megabyte {
+			fmt.Printf("%2.0f KB", float64(n.Dir.Size)/float64(a_kilobyte))
+		} else if n.Dir.Size < a_gigabyte {
+			fmt.Printf("%2.1f MB", float64(n.Dir.Size)/float64(a_megabyte))
 		} else {
-			fmt.Printf("%v GB", n.Dir.Size/(1024*1024*1024))
+			fmt.Printf("%2.1f GB", float64(n.Dir.Size)/float64(a_gigabyte))
 		}
 	}
 }
