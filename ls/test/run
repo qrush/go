@@ -1,13 +1,13 @@
 #!/bin/bash
 
 function t {
-  e $1
+  e "$1"
   test "$EVAL" = "$2"
   if [ $? = 0 ]
   then
     echo "   PASS: '$1' = '$2'"
   else
-    echo "   FAIL: '$1' = '$2' WAS $EXPR"
+    echo "   FAIL: '$1' = '$2' WAS '$EVAL'"
   fi
 }
 
@@ -16,7 +16,7 @@ function m {
   then
     echo "   PASS: =~ '$1'"
   else
-    echo "   FAIL: '$EVAL' !~ '$1' WAS $EVAL"
+    echo "   FAIL: '$EVAL' !~ '$1' WAS '$EVAL'"
   fi
 }
 
@@ -27,6 +27,9 @@ function e {
 
 t "", "Usage: ls [directory] [script.ls]"
 t ".", "Usage: ls [directory] [script.ls]"
+t ". test/syntax-fail1.ls" "syntax error"
+t ". test/syntax-fail2.ls" "syntax error"
+t "nonexistentdir test/example.ls" "Couldn't stat nonexistentdir"
 
 e "test/simpletree test/example.ls"
 m "test/simpletree:"
@@ -49,3 +52,10 @@ m "test/complextree/eins/one:"
 m "test/complextree/eins/one/foodir"
 m "test/complextree/eins/one/foodir:"
 m "test/complextree/eins/one/foodir/blah"
+
+e "test/chmod100tree test/example.ls"
+m "Cannot get contents of test/chmod100tree"
+
+e "test/chmod600tree test/example.ls"
+m "Cannot get contents of test/chmod600tree"
+

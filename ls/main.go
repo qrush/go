@@ -50,11 +50,11 @@ func humansize(n Node) func() {
 		if n.Dir.Size < 1024 {
 			fmt.Printf("%v B", n.Dir.Size)
 		} else if n.Dir.Size < 1024*1024 {
-			fmt.Printf("%v KB", n.Dir.Size / 1024)
+			fmt.Printf("%v KB", n.Dir.Size/1024)
 		} else if n.Dir.Size < 1024*1024*1024 {
-			fmt.Printf("%v MB", n.Dir.Size / (1024*1024))
+			fmt.Printf("%v MB", n.Dir.Size/(1024*1024))
 		} else {
-			fmt.Printf("%v GB", n.Dir.Size / (1024*1024*1024))
+			fmt.Printf("%v GB", n.Dir.Size/(1024*1024*1024))
 		}
 	}
 }
@@ -170,7 +170,9 @@ func Expr(n Node, next Scanner, norecurse bool) []func() {
 		ret := compose2(doRecurse(n), Expr(n, next, norecurse))
 		return ret
 	case "(tab)":
-		ftmp := func() { fmt.Printf("	") }
+		ftmp := func() {
+			fmt.Printf("	")
+		}
 		return compose(ftmp, Expr(n, next, norecurse))
 	case "(name)":
 		return compose(name(n), Expr(n, next, norecurse))
