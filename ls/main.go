@@ -241,10 +241,7 @@ func Expr(n Node, next Scanner, norecurse bool) []func() {
 		ret := join(doRecurse(n), Expr(n, next, norecurse))
 		return ret
 	case "(tab)":
-		ftmp := func() {
-			fmt.Printf("	")
-		}
-		return compose(ftmp, Expr(n, next, norecurse))
+		return compose(printstr("	"), Expr(n, next, norecurse))
 	case "(name)":
 		return compose(name(n), Expr(n, next, norecurse))
 	case "(user)":

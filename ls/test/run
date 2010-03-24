@@ -80,9 +80,20 @@ e "test/chmod600tree test/example.ls"
 m "Cannot get contents of test/chmod600tree"
 chmod 644 test/chmod600tree
 
+e "test/simpletree test/size.ls"
+m "one.+2"
+m "rit.jpg.+59525"
+m "dorms.jpg.+1181694"
+
 e "test/simpletree test/human_size.ls"
 m "one.+2 B"
 m "rit\.jpg.+58 KB"
 m "dorms\.jpg.+1.1 MB"
+
+e "test/simpletree test/uid.ls"
+m "one.+`id -u`"
+
+e "test/simpletree test/gid.ls"
+m "one.+`id -g`"
 
 echo -e "\n$PASSED passed, $FAILED failed"
