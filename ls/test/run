@@ -1,31 +1,61 @@
 #!/bin/bash
 
 function t {
-  EXPR=`eval bin/ls $1`
-  test "$EXPR" = "$2"
+  e "$1"
+  test "$EVAL" = "$2"
   if [ $? = 0 ]
   then
-    echo "PASS: '$1' = '$2'"
+    echo "   PASS: '$1' = '$2'"
   else
-    echo "FAIL: '$1' = '$2' WAS $EXPR"
+    echo "   FAIL: '$1' = '$2' WAS '$EVAL'"
   fi
 }
 
-function r {
-  EXPR=`eval bin/ls $1`
-  if [[ $EXPR =~ $2 ]]
+function m {
+  if [[ $EVAL =~ $1 ]]
   then
-    echo "PASS: '$1' =~ '$2'"
+    echo "   PASS: =~ '$1'"
   else
-    echo "FAIL: '$1' !~ '$2' WAS $EXPR"
+    echo "   FAIL: '$EVAL' !~ '$1' WAS '$EVAL'"
   fi
+}
+
+function e {
+  EVAL=`eval bin/ls $1`
+  echo -e ">> WITH args '$1'"
 }
 
 t "", "Usage: ls [directory] [script.ls]"
 t ".", "Usage: ls [directory] [script.ls]"
+t ". test/syntax-fail1.ls" "syntax error"
+t ". test/syntax-fail2.ls" "syntax error"
+t "nonexistentdir test/example.ls" "Couldn't stat nonexistentdir"
 
-SIMPLE="test/simpletree test/example.ls"
-r "$SIMPLE" "test/simpletree:"
-r "$SIMPLE" "test/simpletree/one"
-r "$SIMPLE" "test/simpletree/two"
-r "$SIMPLE" "test/simpletree/three"
+e "test/simpletree test/example.ls"
+m "test/simpletree:"
+m "test/simpletree/one"
+m "test/simpletree/two"
+m "test/simpletree/three"
+
+e "test/complextree test/example.ls"
+m "test/complextree:"
+m "test/complextree:"
+m "test/complextree/gamma"
+m "test/complextree/beta"
+m "test/complextree/alpha"
+m "test/complextree/eins"
+m "test/complextree/eins:"
+m "test/complextree/eins/rawr"
+m "test/complextree/eins/foobar"
+m "test/complextree/eins/one"
+m "test/complextree/eins/one:"
+m "test/complextree/eins/one/foodir"
+m "test/complextree/eins/one/foodir:"
+m "test/complextree/eins/one/foodir/blah"
+
+e "test/chmod100tree test/example.ls"
+m "Cannot get contents of test/chmod100tree"
+
+e "test/chmod600tree test/example.ls"
+m "Cannot get contents of test/chmod600tree"
+
