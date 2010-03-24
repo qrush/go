@@ -19,8 +19,10 @@ type (
 	}
 )
 
+// contents of the script file
 var bytes []byte
 
+// Stick a function at the start of an array of functions
 func compose(f func(), funcs []func()) []func() {
 	newFuncs := make([]func(), len(funcs)+1)
 	newFuncs[0] = f
@@ -30,6 +32,7 @@ func compose(f func(), funcs []func()) []func() {
 	return newFuncs
 }
 
+// Join array of functions f1 in front of f2
 func compose2(f1 []func(), f2 []func()) []func() {
 	newFuncs := make([]func(), len(f1)+len(f2))
 	for i := range f1 {
@@ -41,10 +44,13 @@ func compose2(f1 []func(), f2 []func()) []func() {
 	return newFuncs
 }
 
+// Print the name of the file
 func name(n Node) func() { return func() { fmt.Printf("%s", n.Name) } }
 
+// Print a newline
 func nl() func() { return func() { fmt.Println() } }
 
+// Print the node's size in human-readable format
 func humansize(n Node) func() {
 	return func() {
 		if n.Dir.Size < 1024 {
@@ -59,6 +65,8 @@ func humansize(n Node) func() {
 	}
 }
 
+// Returns a function for (file ... )
+// If the node is a file, execute the list of functions
 func file(n Node, funcs []func()) func() {
 	return func() {
 		if n.Dir.IsRegular() {
@@ -69,6 +77,8 @@ func file(n Node, funcs []func()) func() {
 	}
 }
 
+// Returns a function for (dir ... )
+// If node is a dir, execute the list of functions, otherwise do nothing
 func dir(n Node, funcs []func()) func() {
 	return func() {
 		if n.Dir.IsDirectory() {
@@ -79,9 +89,10 @@ func dir(n Node, funcs []func()) func() {
 	}
 }
 
+// Get the list of below the given node
 func subNodes(n Node) ([]Node, os.Error) {
 	if n.Dir.IsDirectory() {
-		fpt, err := os.Open(n.Name, os.O_RDONLY, 0666)
+		fpt, err := os.Open(n.Name, os.O_RDONLY, 0)
 		if err != nil {
 			return []Node{}, err
 		}
@@ -96,13 +107,15 @@ func subNodes(n Node) ([]Node, os.Error) {
 			if err != nil {
 				return []Node{}, err
 			}
-			//fmt.Printf("Filename: %s, parent dir: %s\n", nodes[i].Name, n.Name)
 		}
+		fpt.Close()
 		return nodes, nil
 	}
 	return []Node{}, nil
 }
 
+// Execute (sub ... )
+// Only works if node is a directory
 func sub(n Node, funcs []func()) func() {
 	return func() {
 		if n.Dir.IsDirectory() {
@@ -113,8 +126,15 @@ func sub(n Node, funcs []func()) func() {
 	}
 }
 
+// Return a function which prints out an error
 func printerr(s string) func() { return func() { fmt.Println(s) } }
 
+// The main language parsing function
+// n is a file or directory
+// next will give the next token
+// norecurse should be set when the current node is a file and we see (dir ... ) or (sub ... )
+// This flag is necessary because Expr is used to "eat" the remainder of the expression, but
+// allowing recursion can create infinite loops
 func Expr(n Node, next Scanner, norecurse bool) []func() {
 	nt, ok, arg := next(true)
 	if !ok {
@@ -126,27 +146,30 @@ func Expr(n Node, next Scanner, norecurse bool) []func() {
 		return Expr(n, next, norecurse)
 	case "(file":
 		if !(n.Dir.IsRegular()) {
+			// Not a file, so eat the rest of the expression without recursing
 			Expr(n, next, true)
 			return Expr(n, next, norecurse)
 		}
 		return compose(file(n, Expr(n, next, norecurse)), Expr(n, next, norecurse))
 	case "(dir":
 		if !(n.Dir.IsDirectory()) {
+			// Not a directory, so eat the rest of the expression without recursing
 			Expr(n, next, true)
-			//return Expr(n, next, norecurse)
 			return []func(){}
 		}
 		return compose(dir(n, Expr(n, next, norecurse)), Expr(n, next, norecurse))
 	case "(sub":
 		subfuncs := []func(){}
 		var err os.Error
+		// Find the items under the current node
 		n.Subs, err = subNodes(n)
 		if err != nil {
 			Expr(n, next, true)
-			return compose(printerr("Cannot get contents of "+n.Name), Expr(n, next, norecurse))
+			return compose(printerr(fmt.Sprintf("Cannot get contents of %v, error = %v", n.Name, err)), Expr(n, next, norecurse))
 		}
 		strs := strings.Fields(string(bytes))
 		for i, _ := range n.Subs {
+			// We create a new scanner because using "next" would 'use up' all the expressions on the first file.
 			arg2 := arg
 			tscan := func(use bool) (string, bool, int) {
 				switch {
@@ -190,12 +213,14 @@ func Expr(n Node, next Scanner, norecurse bool) []func() {
 	case ")":
 		return []func(){}
 	default:
+		// By default, we print all un-recognized items
 		ftmp := func() { fmt.Printf(nt) }
 		return compose(ftmp, Expr(n, next, norecurse))
 	}
 	return nil
 }
 
+// Recurse on a given node; this essentially starts the entire program over with a new node
 func doRecurse(n Node) []func() {
 	arg := 0
 	strs := strings.Fields(string(bytes))
@@ -214,6 +239,7 @@ func doRecurse(n Node) []func() {
 	result := Expr(n, scanner, false)
 	return result
 }
+
 
 func main() {
 	if len(os.Args) != 3 {
