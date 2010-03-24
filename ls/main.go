@@ -19,9 +19,11 @@ type (
 	}
 )
 
-// contents of the script file
 var (
-	bytes      []byte
+	// contents of the script file
+	bytes []byte
+
+	// precalculating byte sizes for os.Dir.Size checks
 	a_kilobyte uint64 = 1024
 	a_megabyte uint64 = a_kilobyte * 1024
 	a_gigabyte uint64 = a_megabyte * 1024
@@ -256,7 +258,7 @@ func main() {
 
 	dname := os.Args[1]
 	if dname[len(dname)-1] == '/' {
-		dname = dname[0:len(dname)-1]
+		dname = dname[0 : len(dname)-1]
 	}
 	bytes, _ = ioutil.ReadFile(os.Args[2])
 
