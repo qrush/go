@@ -250,6 +250,9 @@ func main() {
 	}
 
 	dname := os.Args[1]
+	if dname[len(dname)-1] == '/' {
+		dname = dname[0:len(dname)-1]
+	}
 	bytes, _ = ioutil.ReadFile(os.Args[2])
 
 	var err os.Error
