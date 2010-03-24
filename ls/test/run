@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function t {
-  EXPR=`eval bin/ls`
+  EXPR=`eval bin/ls $1`
   test "$EXPR" = "$2"
   if [ $? = 0 ]
   then
@@ -11,5 +11,21 @@ function t {
   fi
 }
 
+function r {
+  EXPR=`eval bin/ls $1`
+  if [[ $EXPR =~ $2 ]]
+  then
+    echo "PASS: '$1' =~ '$2'"
+  else
+    echo "FAIL: '$1' !~ '$2' WAS $EXPR"
+  fi
+}
+
 t "", "Usage: ls [directory] [script.ls]"
 t ".", "Usage: ls [directory] [script.ls]"
+
+SIMPLE="test/simpletree test/example.ls"
+r "$SIMPLE" "test/simpletree:"
+r "$SIMPLE" "test/simpletree/one"
+r "$SIMPLE" "test/simpletree/two"
+r "$SIMPLE" "test/simpletree/three"
