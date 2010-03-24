@@ -113,6 +113,14 @@ func doRecurse(n Node) []func() {
 	return result
 }
 
+func getNode(dname string) (*Node, os.Error) {
+	var err os.Error
+	node := new(Node)
+	node.Name = dname
+	node.Dir, err = os.Stat(dname)
+	return node, err
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Nodes
 ///////////////////////////////////////////////////////////////////////////////
@@ -274,12 +282,21 @@ func main() {
 	}
 
 	dname := path.Clean(os.Args[1])
-	bytes, _ = ioutil.ReadFile(os.Args[2])
+	fName := os.Args[2]
 
-	var err os.Error
-	node := new(Node)
-	node.Name = dname
-	node.Dir, err = os.Stat(dname)
+	fNode, fErr := getNode(fName)
+	if fErr == nil && fNode.Dir.IsRegular() {
+		bytes, fErr = ioutil.ReadFile(fName)
+		if fErr != nil {
+			error("There was an error reading: " + fName)
+		} else if len(bytes) == 0 {
+			error("Script was empty: " + fName)
+		}
+	} else {
+		error("Couldn't find " + fName)
+	}
+
+	node, err := getNode(dname)
 	if err != nil {
 		error("Couldn't stat " + dname)
 	}

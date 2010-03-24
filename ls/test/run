@@ -45,6 +45,12 @@ t ".", "Usage: ls [directory] [script.ls]"
 t ". test/syntax-fail1.ls" "syntax error"
 t ". test/syntax-fail2.ls" "syntax error"
 t "nonexistentdir test/example.ls" "Couldn't stat nonexistentdir"
+t ". test/nonexistent.ls" "Couldn't find test/nonexistent.ls"
+t ". test/empty.ls" "Script was empty: test/empty.ls"
+
+chmod 100 test/example.ls
+t "test/simpletree test/example.ls" "There was an error reading: test/example.ls"
+chmod 644 test/example.ls
 
 e "test/simpletree test/example.ls"
 m "test/simpletree:"
