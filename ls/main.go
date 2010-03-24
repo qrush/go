@@ -1,3 +1,8 @@
+///////////////////////////////////////////////////////////////////////////////
+// ls
+// John Floren, Nick Quaranto
+///////////////////////////////////////////////////////////////////////////////
+
 package main
 
 import (
@@ -12,6 +17,7 @@ type (
 	// Advance past next token if argument is true.
 	Scanner func(bool) (string, bool, int)
 
+	// Represents an element in the parseable .ls file
 	Node struct {
 		Name string
 		Dir  *os.Dir
@@ -29,6 +35,10 @@ var (
 	a_gigabyte uint64 = a_megabyte * 1024
 )
 
+///////////////////////////////////////////////////////////////////////////////
+// Utility functions
+///////////////////////////////////////////////////////////////////////////////
+
 // Stick a function at the start of an array of functions
 func compose(f func(), funcs []func()) []func() {
 	newFuncs := make([]func(), len(funcs)+1)
@@ -40,7 +50,7 @@ func compose(f func(), funcs []func()) []func() {
 }
 
 // Join array of functions f1 in front of f2
-func compose2(f1 []func(), f2 []func()) []func() {
+func join(f1 []func(), f2 []func()) []func() {
 	newFuncs := make([]func(), len(f1)+len(f2))
 	for i := range f1 {
 		newFuncs[i] = f1[i]
@@ -50,6 +60,61 @@ func compose2(f1 []func(), f2 []func()) []func() {
 	}
 	return newFuncs
 }
+
+// print out error and die
+func error(msg string) {
+	fmt.Println(msg)
+	os.Exit(1)
+}
+
+// Get the list of below the given node
+func subNodes(n Node) ([]Node, os.Error) {
+	if n.Dir.IsDirectory() {
+		fpt, err := os.Open(n.Name, os.O_RDONLY, 0)
+		if err != nil {
+			return []Node{}, err
+		}
+		names, err2 := fpt.Readdirnames(-1)
+		if err2 != nil {
+			return []Node{}, err2
+		}
+		nodes := make([]Node, len(names))
+		for i, cn := range names {
+			nodes[i].Name = n.Name + "/" + cn
+			nodes[i].Dir, err = os.Stat(nodes[i].Name)
+			if err != nil {
+				return []Node{}, err
+			}
+		}
+		fpt.Close()
+		return nodes, nil
+	}
+	return []Node{}, nil
+}
+
+// Recurse on a given node; this essentially starts the entire program over with a new node
+func doRecurse(n Node) []func() {
+	arg := 0
+	strs := strings.Fields(string(bytes))
+	scanner := func(use bool) (string, bool, int) {
+		switch {
+		case arg >= len(strs):
+			return "", false, arg
+		case use:
+			ret := strs[arg]
+			arg++
+			return ret, true, arg
+		}
+		return strs[arg], true, arg
+	}
+
+	result := Expr(n, scanner, false)
+	return result
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Nodes
+///////////////////////////////////////////////////////////////////////////////
 
 // Print the name of the file
 func name(n Node) func() { return func() { fmt.Printf("%s", n.Name) } }
@@ -96,31 +161,6 @@ func dir(n Node, funcs []func()) func() {
 	}
 }
 
-// Get the list of below the given node
-func subNodes(n Node) ([]Node, os.Error) {
-	if n.Dir.IsDirectory() {
-		fpt, err := os.Open(n.Name, os.O_RDONLY, 0)
-		if err != nil {
-			return []Node{}, err
-		}
-		names, err2 := fpt.Readdirnames(-1)
-		if err2 != nil {
-			return []Node{}, err2
-		}
-		nodes := make([]Node, len(names))
-		for i, cn := range names {
-			nodes[i].Name = n.Name + "/" + cn
-			nodes[i].Dir, err = os.Stat(nodes[i].Name)
-			if err != nil {
-				return []Node{}, err
-			}
-		}
-		fpt.Close()
-		return nodes, nil
-	}
-	return []Node{}, nil
-}
-
 // Execute (sub ... )
 // Only works if node is a directory
 func sub(n Node, funcs []func()) func() {
@@ -134,9 +174,10 @@ func sub(n Node, funcs []func()) func() {
 }
 
 // Return a function which prints out an error
-func printerr(s string) func() { return func() { fmt.Println(s) } }
+func printstr(s string) func() { return func() { fmt.Println(s) } }
 
-// The main language parsing function
+///////////////////////////////////////////////////////////////////////////////
+// Expression Parser
 // n is a file or directory
 // next will give the next token
 // norecurse should be set when the current node is a file and we see (dir ... ) or (sub ... )
@@ -145,9 +186,9 @@ func printerr(s string) func() { return func() { fmt.Println(s) } }
 func Expr(n Node, next Scanner, norecurse bool) []func() {
 	nt, ok, arg := next(true)
 	if !ok {
-		fmt.Println("syntax error")
-		os.Exit(1)
+		error("syntax error")
 	}
+
 	switch nt {
 	case "(":
 		return Expr(n, next, norecurse)
@@ -172,7 +213,7 @@ func Expr(n Node, next Scanner, norecurse bool) []func() {
 		n.Subs, err = subNodes(n)
 		if err != nil {
 			Expr(n, next, true)
-			return compose(printerr(fmt.Sprintf("Cannot get contents of %v, error = %v", n.Name, err)), Expr(n, next, norecurse))
+			return compose(printstr(fmt.Sprintf("Cannot get contents of %v, error = %v", n.Name, err)), Expr(n, next, norecurse))
 		}
 		strs := strings.Fields(string(bytes))
 		for i, _ := range n.Subs {
@@ -192,12 +233,12 @@ func Expr(n Node, next Scanner, norecurse bool) []func() {
 			subfuncs = compose(sub(n, Expr(n.Subs[i], tscan, norecurse)), subfuncs)
 		}
 		Expr(n, next, true)
-		return compose2(subfuncs, Expr(n, next, norecurse))
+		return join(subfuncs, Expr(n, next, norecurse))
 	case "(recurse)":
 		if norecurse {
 			return []func(){}
 		}
-		ret := compose2(doRecurse(n), Expr(n, next, norecurse))
+		ret := join(doRecurse(n), Expr(n, next, norecurse))
 		return ret
 	case "(tab)":
 		ftmp := func() {
@@ -223,37 +264,16 @@ func Expr(n Node, next Scanner, norecurse bool) []func() {
 		return []func(){}
 	default:
 		// By default, we print all un-recognized items
-		ftmp := func() { fmt.Printf(nt) }
-		return compose(ftmp, Expr(n, next, norecurse))
+		return compose(printstr(nt), Expr(n, next, norecurse))
 	}
 	return nil
 }
 
-// Recurse on a given node; this essentially starts the entire program over with a new node
-func doRecurse(n Node) []func() {
-	arg := 0
-	strs := strings.Fields(string(bytes))
-	scanner := func(use bool) (string, bool, int) {
-		switch {
-		case arg >= len(strs):
-			return "", false, arg
-		case use:
-			ret := strs[arg]
-			arg++
-			return ret, true, arg
-		}
-		return strs[arg], true, arg
-	}
-
-	result := Expr(n, scanner, false)
-	return result
-}
-
-
+///////////////////////////////////////////////////////////////////////////////
+// Run! Checks os.Args and gets the parser/evaluator started.
 func main() {
 	if len(os.Args) != 3 {
-		fmt.Println("Usage: ls [directory] [script.ls]")
-		os.Exit(1)
+		error("Usage: ls [directory] [script.ls]")
 	}
 
 	dname := os.Args[1]
@@ -267,8 +287,7 @@ func main() {
 	node.Name = dname
 	node.Dir, err = os.Stat(dname)
 	if err != nil {
-		fmt.Println("Couldn't stat " + dname)
-		os.Exit(1)
+		error("Couldn't stat " + dname)
 	}
 
 	arg := 0
