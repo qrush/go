@@ -77,14 +77,14 @@ m "test/complextree/eins/one/foodir/blah"
 chmod 100 test/chmod100tree
 e "test/chmod100tree test/example.ls"
 m "Cannot get contents of test/chmod100tree"
-chmod 655 test/chmod100tree
+chmod 755 test/chmod100tree
 
 chmod 000 test/chmod600tree
 chmod o+r test/chmod600tree
 chmod o+w test/chmod600tree
 e "test/chmod600tree test/example.ls"
 m "Cannot get contents of test/chmod600tree"
-chmod 655 test/chmod600tree
+chmod 755 test/chmod600tree
 
 e "test/simpletree test/size.ls"
 m "one.+2"
