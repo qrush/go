@@ -45,6 +45,20 @@ func name(n Node) func() { return func() { fmt.Printf("%s", n.Name) } }
 
 func nl() func() { return func() { fmt.Println() } }
 
+func humansize(n Node) func() {
+	return func() {
+		if n.Dir.Size < 1024 {
+			fmt.Printf("%v B", n.Dir.Size)
+		} else if n.Dir.Size < 1024*1024 {
+			fmt.Printf("%v KB", n.Dir.Size / 1024)
+		} else if n.Dir.Size < 1024*1024*1024 {
+			fmt.Printf("%v MB", n.Dir.Size / (1024*1024))
+		} else {
+			fmt.Printf("%v GB", n.Dir.Size / (1024*1024*1024))
+		}
+	}
+}
+
 func file(n Node, funcs []func()) func() {
 	return func() {
 		if n.Dir.IsRegular() {
@@ -103,7 +117,7 @@ func printerr(s string) func() { return func() { fmt.Println(s) } }
 
 func Expr(n Node, next Scanner, norecurse bool) []func() {
 	nt, ok, arg := next(true)
-	if _, ok2, _ := next(false); !ok2 || !ok {
+	if !ok {
 		fmt.Println("syntax error")
 		os.Exit(1)
 	}
@@ -155,8 +169,22 @@ func Expr(n Node, next Scanner, norecurse bool) []func() {
 		}
 		ret := compose2(doRecurse(n), Expr(n, next, norecurse))
 		return ret
+	case "(tab)":
+		ftmp := func() { fmt.Printf("	") }
+		return compose(ftmp, Expr(n, next, norecurse))
 	case "(name)":
 		return compose(name(n), Expr(n, next, norecurse))
+	case "(user)":
+		ftmp := func() { fmt.Printf("%d", n.Dir.Uid) }
+		return compose(ftmp, Expr(n, next, norecurse))
+	case "(group)":
+		ftmp := func() { fmt.Printf("%d", n.Dir.Gid) }
+		return compose(ftmp, Expr(n, next, norecurse))
+	case "(size)":
+		ftmp := func() { fmt.Printf("%d", n.Dir.Size) }
+		return compose(ftmp, Expr(n, next, norecurse))
+	case "(human_size)":
+		return compose(humansize(n), Expr(n, next, norecurse))
 	case "(nl)":
 		return compose(nl(), Expr(n, next, norecurse))
 	case ")":
