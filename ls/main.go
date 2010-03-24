@@ -36,7 +36,7 @@ func compose2(f1 []func(), f2 []func()) []func() {
 		newFuncs[i] = f1[i]
 	}
 	for i := range f2 {
-		newFuncs[i + len(f1)] = f2[i]
+		newFuncs[i+len(f1)] = f2[i]
 	}
 	return newFuncs
 }
@@ -66,7 +66,7 @@ func dir(n Node, funcs []func()) func() {
 }
 
 func subNodes(n Node) ([]Node, os.Error) {
-	if (n.Dir.IsDirectory()) {
+	if n.Dir.IsDirectory() {
 		fpt, err := os.Open(n.Name, os.O_RDONLY, 0666)
 		if err != nil {
 			return []Node{}, err
@@ -85,8 +85,8 @@ func subNodes(n Node) ([]Node, os.Error) {
 			//fmt.Printf("Filename: %s, parent dir: %s\n", nodes[i].Name, n.Name)
 		}
 		return nodes, nil
-	} 
-	return []Node {}, nil
+	}
+	return []Node{}, nil
 }
 
 func sub(n Node, funcs []func()) func() {
@@ -99,11 +99,7 @@ func sub(n Node, funcs []func()) func() {
 	}
 }
 
-func printerr(s string) func() {
-	return func() {
-		fmt.Println(s)
-	}
-}
+func printerr(s string) func() { return func() { fmt.Println(s) } }
 
 func Expr(n Node, next Scanner, norecurse bool) []func() {
 	nt, ok, arg := next(true)
@@ -124,16 +120,16 @@ func Expr(n Node, next Scanner, norecurse bool) []func() {
 		if !(n.Dir.IsDirectory()) {
 			Expr(n, next, true)
 			//return Expr(n, next, norecurse)
-			return []func() {}
+			return []func(){}
 		}
 		return compose(dir(n, Expr(n, next, norecurse)), Expr(n, next, norecurse))
 	case "(sub":
-		subfuncs := []func() {}
+		subfuncs := []func(){}
 		var err os.Error
 		n.Subs, err = subNodes(n)
 		if err != nil {
 			Expr(n, next, true)
-			return compose(printerr("Cannot get contents of " + n.Name), Expr(n, next, norecurse))
+			return compose(printerr("Cannot get contents of "+n.Name), Expr(n, next, norecurse))
 		}
 		strs := strings.Fields(string(bytes))
 		for i, _ := range n.Subs {
@@ -155,7 +151,7 @@ func Expr(n Node, next Scanner, norecurse bool) []func() {
 		return compose2(subfuncs, Expr(n, next, norecurse))
 	case "(recurse)":
 		if norecurse {
-			return []func() {}
+			return []func(){}
 		}
 		ret := compose2(doRecurse(n), Expr(n, next, norecurse))
 		return ret
@@ -166,9 +162,7 @@ func Expr(n Node, next Scanner, norecurse bool) []func() {
 	case ")":
 		return []func(){}
 	default:
-		ftmp := func() {
-			fmt.Printf(nt)
-		}
+		ftmp := func() { fmt.Printf(nt) }
 		return compose(ftmp, Expr(n, next, norecurse))
 	}
 	return nil
@@ -200,7 +194,7 @@ func main() {
 	var err os.Error
 	node := new(Node)
 	node.Name = dname
-	node.Dir,err = os.Stat(dname)
+	node.Dir, err = os.Stat(dname)
 	if err != nil {
 		fmt.Println("Couldn't stat " + dname)
 		os.Exit(1)
