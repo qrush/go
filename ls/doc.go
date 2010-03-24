@@ -16,7 +16,7 @@ A more complex script that displays the filename if given a file and recursively
 			(name) : (nl)
 			(sub (dir (name) (nl) ) )
 			(sub (file (name) (nl) ) )
-			(sub (dir (recurse) ) ) 
+			(sub (dir (recurse) ) )
 		)
 	)
 Example usage:
@@ -42,7 +42,7 @@ The script must be enclosed at the top level with a pair of parentheses. The ava
 	(file ... ): If the current item is a file, execute the items in this expression.
 	(dir ... ): If the current item is a directory, execute the items in this expression.
 	(sub ... ): Loop over the direct descendants of a directory
-	(recurse): Re-execute the entire script for the current item. 
+	(recurse): Re-execute the entire script for the current item.
 	(tab): Insert a tab character
 	(name): Print the current item's name
 	(user): Print the numeric user ID of the current item

@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"strings"
 	"os"
+	"path"
 )
 
 type (
@@ -272,10 +273,7 @@ func main() {
 		error("Usage: ls [directory] [script.ls]")
 	}
 
-	dname := os.Args[1]
-	if dname[len(dname)-1] == '/' {
-		dname = dname[0 : len(dname)-1]
-	}
+	dname := path.Clean(os.Args[1])
 	bytes, _ = ioutil.ReadFile(os.Args[2])
 
 	var err os.Error
@@ -286,21 +284,7 @@ func main() {
 		error("Couldn't stat " + dname)
 	}
 
-	arg := 0
-	strs := strings.Fields(string(bytes))
-	scanner := func(use bool) (string, bool, int) {
-		switch {
-		case arg >= len(strs):
-			return "", false, arg
-		case use:
-			ret := strs[arg]
-			arg++
-			return ret, true, arg
-		}
-		return strs[arg], true, arg
-	}
-
-	result := Expr(*node, scanner, false)
+	result := doRecurse(*node)
 	for _, fn := range result {
 		fn()
 	}
