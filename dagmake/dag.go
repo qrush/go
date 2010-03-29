@@ -17,9 +17,11 @@ only once.
 package dag
 
 import (
+	"io/ioutil"
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 )
 
 type (
@@ -90,8 +92,26 @@ func init() {
 	flag.StringVar(&file, "f", "mkfile", "file with target, sources, and command lines")
 }
 
-func (d Dag) AddFile(file string, fac TargetFactory) (string, os.Error) {
-	fmt.Println("Adding a file: " + file)
+func (d Dag) AddFile(name string, fac TargetFactory) (string, os.Error) {
+	fmt.Println("Adding a file: " + name)
+
+	var bytes []byte
+	file, err := os.Stat(name)
+	if err == nil && file.IsRegular() {
+		bytes, err = ioutil.ReadFile(name)
+		if err != nil {
+			error("There was an error reading: " + name)
+		} else if len(bytes) == 0 {
+			error("Script was empty: " + name)
+		}
+	} else {
+		error("Couldn't find " + name)
+	}
+
+	blocks := strings.Split(string(bytes), "\n\n", 0)
+	fmt.Println("first block: " + blocks[0])
+	fmt.Println("second block: " + blocks[1])
+
 	return "AddFile", nil
 }
 
@@ -113,6 +133,11 @@ func (d Dag) Apply(t Target, a Action) os.Error {
 
 func (d Dag) String() string { return "I'm a dag!" }
 
+// print out error and die
+func error(msg string) {
+	fmt.Println(msg)
+	os.Exit(1)
+}
 // Convenience method to run a typical command line.
 // Must execute flag.Parse() before calling.
 func Main(factory TargetFactory, action Action) {
