@@ -7,6 +7,10 @@ package main
 
 import (
 	"fmt"
+	"dag"
 )
 
-func main() { fmt.Println("LOL") }
+func main() {
+	fmt.Println("in main")
+	dag.Run()
+}

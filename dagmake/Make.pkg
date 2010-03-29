@@ -4,7 +4,7 @@
 # pkg = name of package
 # g = list of source files for package, one must be $(pkg).go
 
-all: $(pkg).$O	; for cmd in $(cmds); do $(MAKE) $O bin/$$cmd; done
+all: $(pkg).$O	; for cmd in $(cmds); do $(MAKE) $O/$$cmd; done
 clean:		; rm -rf bin/*
 doc:		; ( godoc -http=:6060 -path=.. & \
 		    sleep 5; open -a Safari http://localhost:6060/pkg/code/$(pkg) \
@@ -14,13 +14,11 @@ wc:		; sed -e '/^[ 	]*\//d' -e '/^[ 	]*$$/d' main.go $g | wc -l
 
 $(pkg).$O: $g	; $(GC) $(GCFLAGS) -o $@ $g
 
-$O:		; mkdir bin
-
-bin/$(pkg): main.go
-bin/%: $(pkg).$O %.go
+$O/$(pkg): main.go
+$O/%: $(pkg).$O %.go
 	if [ $* = $(pkg) ]; then \
 	  $(GC) $(GCFLAGS) -I . -o bin/main.$O main.go && \
- 	  $(LD) $(LDFLAGS) -L . -o $@ bin/main.$O; \
+ 	  $(LD) $(LDFLAGS) -L . -o bin/$(pkg) bin/main.$O; \
 	else \
 	  $(GC) $(GCFLAGS) -I . -o bin/$*.$O $*.go && \
-	  $(LD) $(LDFLAGS) -L . -o $@ bin/$*.$O; fi
+	  $(LD) $(LDFLAGS) -L . -o bin/$(pkg) bin/$*.$O; fi

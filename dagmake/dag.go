@@ -88,10 +88,11 @@ func init() {
 	flag.StringVar(&file, "f", "mkfile", "file with target, sources, and command lines")
 }
 
+func Run() { fmt.Println("in dag") }
+
 // Convenience method to run a typical command line.
 // Must execute flag.Parse() before calling.
 func Main(factory TargetFactory, action Action) {
-	fmt.Println("Hi!")
 	/*
 		s := NewSet()
 		if first, err := s.AddFile(file, factory); err != nil {
