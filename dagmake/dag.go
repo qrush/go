@@ -78,6 +78,8 @@ type (
 
 	// Manipulate a target.
 	Action func(Target) os.Error
+
+	Dag map[string]Target
 )
 
 // Contains the name of the dependency graph file.
@@ -88,31 +90,55 @@ func init() {
 	flag.StringVar(&file, "f", "mkfile", "file with target, sources, and command lines")
 }
 
-func Run() { fmt.Println("in dag") }
+func (d Dag) AddFile(file string, fac TargetFactory) (string, os.Error) {
+	fmt.Println("Adding a file: " + file)
+	return "AddFile", nil
+}
+
+func (d Dag) AddString(str string, fac TargetFactory) (string, os.Error) {
+	return "AddString", nil
+}
+
+func (d Dag) Add(strs []string, fac TargetFactory) (string, os.Error) {
+	return "Add", nil
+}
+
+func (d Dag) Put(t Target) (Target, os.Error) { return nil, nil }
+
+func (d Dag) Get(name string) Target { return nil }
+
+func (d Dag) Apply(t Target, a Action) os.Error {
+	return nil
+}
+
+func (d Dag) String() string { return "I'm a dag!" }
 
 // Convenience method to run a typical command line.
 // Must execute flag.Parse() before calling.
 func Main(factory TargetFactory, action Action) {
-	/*
-		s := NewSet()
-		if first, err := s.AddFile(file, factory); err != nil {
-			fmt.Fprintf(os.Stderr, "dag: %s: %s\n", file, err)
-			os.Exit(1)
+	flag.Parse()
+	s := new(Dag)
+	if first, err := s.AddFile(file, factory); err != nil {
+		fmt.Fprintf(os.Stderr, "dag: %s: %s\n", file, err)
+		os.Exit(1)
 
-		} else if flag.NArg() == 0 {
-			s.Apply(s.Get(first), action)
+	} else if flag.NArg() == 0 {
+		fmt.Println("NArg() == 0")
+		fmt.Println(first)
+		s.Apply(s.Get(first), action)
 
-		} else {
-			for _, arg := range flag.Args() {
-				if len(arg) > 0 {
-					if target := s.Get(arg); target != nil {
-						s.Apply(target, action)
-					} else {
-						fmt.Fprintf(os.Stderr, "dag: %s: undefined target\n", arg)
-						os.Exit(1)
-					}
+	} else {
+		fmt.Println("NArg() > 0")
+		fmt.Println(flag.Args())
+		for _, arg := range flag.Args() {
+			if len(arg) > 0 {
+				if target := s.Get(arg); target != nil {
+					s.Apply(target, action)
+				} else {
+					fmt.Fprintf(os.Stderr, "dag: %s: undefined target\n", arg)
+					os.Exit(1)
 				}
 			}
 		}
-	*/
+	}
 }
