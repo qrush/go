@@ -1,11 +1,11 @@
 # common makefile for commands depending on a single package
-# main.go is compiled into $O/$(pkg)
+# main.go is compiled into bin/$(pkg)
 # cmds = names of commands
 # pkg = name of package
 # g = list of source files for package, one must be $(pkg).go
 
-all: $(pkg).$O	; for cmd in $(cmds); do $(MAKE) $O $O/$$cmd; done
-clean:		; rm -rf [$(OS)] *.[$(OS)] ._*
+all: $(pkg).$O	; for cmd in $(cmds); do $(MAKE) $O bin/$$cmd; done
+clean:		; rm -rf bin/*
 doc:		; ( godoc -http=:6060 -path=.. & \
 		    sleep 5; open -a Safari http://localhost:6060/pkg/code/$(pkg) \
 					    http://localhost:6060/cmd/code/$(pkg); \
@@ -14,13 +14,13 @@ wc:		; sed -e '/^[ 	]*\//d' -e '/^[ 	]*$$/d' main.go $g | wc -l
 
 $(pkg).$O: $g	; $(GC) $(GCFLAGS) -o $@ $g
 
-$O:		; mkdir $@
+$O:		; mkdir bin
 
-$O/$(pkg): main.go
-$O/%: $(pkg).$O %.go
+bin/$(pkg): main.go
+bin/%: $(pkg).$O %.go
 	if [ $* = $(pkg) ]; then \
-	  $(GC) $(GCFLAGS) -I . -o main.$O main.go && \
- 	  $(LD) $(LDFLAGS) -L . -o $@ main.$O; \
+	  $(GC) $(GCFLAGS) -I . -o bin/main.$O main.go && \
+ 	  $(LD) $(LDFLAGS) -L . -o $@ bin/main.$O; \
 	else \
-	  $(GC) $(GCFLAGS) -I . -o $*.$O $*.go && \
-	  $(LD) $(LDFLAGS) -L . -o $@ $*.$O; fi
+	  $(GC) $(GCFLAGS) -I . -o bin/$*.$O $*.go && \
+	  $(LD) $(LDFLAGS) -L . -o $@ bin/$*.$O; fi
