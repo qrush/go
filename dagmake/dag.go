@@ -98,13 +98,12 @@ func (d Dag) AddFile(name string, fac TargetFactory) (string, os.Error) {
 	first := ""
 
 	file, err := os.Stat(name)
-	if err == nil && file.IsRegular() {
-		bytes, err = ioutil.ReadFile(name)
-	}
 
-	if err == nil {
-		blocks := strings.Split(string(bytes), "\n\n", 0)
-		first, err = d.Add(blocks, fac)
+	if err == nil && file.IsRegular() {
+		if bytes, err = ioutil.ReadFile(name); err == nil {
+			blocks := strings.Split(string(bytes), "\n\n", 0)
+			first, err = d.Add(blocks, fac)
+		}
 	}
 
 	return first, err
@@ -116,24 +115,20 @@ func (d Dag) AddString(str string, fac TargetFactory) (string, os.Error) {
 }
 
 func (d Dag) Add(strs []string, fac TargetFactory) (string, os.Error) {
-	if len(strs) == 0 {
-		return "", os.NewError("Empty file")
-	}
-
+	err := os.NewError("empty file")
 	first := ""
-	for i, str := range strs {
-		var err os.Error
-		if i == 0 {
-			first, err = d.AddString(str, fac)
-		} else {
-			_, err = d.AddString(str, fac)
-		}
 
-		if err != nil {
-			return first, err
+	if len(strs) != 0 {
+		for i, str := range strs {
+			if i == 0 {
+				first, err = d.AddString(str, fac)
+			} else {
+				_, err = d.AddString(str, fac)
+			}
 		}
 	}
-	return first, nil
+
+	return first, err
 }
 
 func (d Dag) Put(t Target) (Target, os.Error) { return nil, nil }
