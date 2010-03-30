@@ -160,8 +160,6 @@ func (d Dag) Get(name string) Target {
 }
 
 func (d Dag) Apply(t Target, a Action) os.Error {
-	fmt.Println("Applying " + t.Name())
-
 	done, _ := d.Completed[t.Name()]
 
 	if ! done {
@@ -192,7 +190,7 @@ func (t DagTarget) Name() string {
 }
 
 func (t DagTarget) String() string {
-	return "I'm a dag target!"
+	return t.Name()
 }
 
 func DagTargetFactory(s Set, lines []string, fac TargetFactory) (Target, os.Error) {
@@ -229,9 +227,6 @@ func Main(factory TargetFactory, action Action) {
 		os.Exit(1)
 
 	} else if flag.NArg() == 0 {
-		fmt.Println("NArg() == 0")
-		fmt.Println(first)
-		fmt.Println(s.Get(first))
 		s.Apply(s.Get(first), action)
 
 	} else {

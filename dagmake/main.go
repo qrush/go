@@ -12,10 +12,9 @@ import (
 )
 
 func main() {
-	fmt.Println("in main")
 	dag.Main(dag.DagTargetFactory,
 		func(t dag.Target) os.Error {
-			fmt.Println("LOLOLOL: " + t.Name())
+			fmt.Println(t)
 			return nil
 		})
 }
