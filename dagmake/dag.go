@@ -81,7 +81,10 @@ type (
 	// Manipulate a target.
 	Action func(Target) os.Error
 
-	Dag map[string]Target
+	Dag struct {
+		Targets map[string]Target
+		Completed map[string]bool
+	}
 
 	DagTarget struct {
 		Field string
@@ -147,16 +150,26 @@ func (d Dag) Put(t Target) (Target, os.Error) {
 		return existing.Merge(t)
 	}
 
-	d[t.Name()] = t
+	d.Targets[t.Name()] = t
 	return t, nil
 }
 
 func (d Dag) Get(name string) Target {
-	target, _ := d[name]
+	target, _ := d.Targets[name]
 	return target
 }
 
 func (d Dag) Apply(t Target, a Action) os.Error {
+	fmt.Println("Applying " + t.Name())
+
+	done, _ := d.Completed[t.Name()]
+
+	if ! done {
+		t.ApplyPreq(a)
+		d.Targets[t.Name()] = t, true
+		a(t)
+	}
+
 	return nil
 }
 
@@ -206,7 +219,11 @@ func DagTargetFactory(s Set, lines []string, fac TargetFactory) (Target, os.Erro
 // Must execute flag.Parse() before calling.
 func Main(factory TargetFactory, action Action) {
 	flag.Parse()
-	s := make(Dag)
+
+	s := new(Dag)
+	s.Targets = make(map[string]Target)
+	s.Completed = make(map[string]bool)
+
 	if first, err := s.AddFile(file, factory); err != nil {
 		fmt.Fprintf(os.Stderr, "dag: %s: %s\n", file, err)
 		os.Exit(1)
@@ -214,6 +231,7 @@ func Main(factory TargetFactory, action Action) {
 	} else if flag.NArg() == 0 {
 		fmt.Println("NArg() == 0")
 		fmt.Println(first)
+		fmt.Println(s.Get(first))
 		s.Apply(s.Get(first), action)
 
 	} else {
