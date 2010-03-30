@@ -13,8 +13,6 @@ import (
 
 func main() {
 	fmt.Println("in main")
-	dag.Main(func(s dag.Set, strs []string, fac dag.TargetFactory) (dag.Target, os.Error) {
-		return nil, nil
-	},
+	dag.Main(dag.DagTargetFactory,
 		func(t dag.Target) os.Error { return nil })
 }

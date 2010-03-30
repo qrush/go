@@ -84,8 +84,8 @@ type (
 	Dag map[string]Target
 
 	DagTarget struct {
-		name string
-		prereqs map[string]DagTarget
+		Field string
+		Prereqs map[string]*DagTarget
 	}
 )
 
@@ -98,7 +98,6 @@ func init() {
 }
 
 func (d Dag) AddFile(name string, fac TargetFactory) (string, os.Error) {
-	fmt.Println("Adding a file: " + name)
 	var bytes []byte
 	first := ""
 
@@ -115,8 +114,13 @@ func (d Dag) AddFile(name string, fac TargetFactory) (string, os.Error) {
 }
 
 func (d Dag) AddString(str string, fac TargetFactory) (string, os.Error) {
-	fmt.Println("Adding strings: " + str)
-	return "AddString", nil
+	target, err := fac(d, strings.Split(str, "\n", 0), nil)
+
+	if err == nil {
+		return target.Name(), nil
+	}
+
+	return "", err
 }
 
 func (d Dag) Add(strs []string, fac TargetFactory) (string, os.Error) {
@@ -136,9 +140,21 @@ func (d Dag) Add(strs []string, fac TargetFactory) (string, os.Error) {
 	return first, err
 }
 
-func (d Dag) Put(t Target) (Target, os.Error) { return nil, nil }
+func (d Dag) Put(t Target) (Target, os.Error) {
+	existing := d.Get(t.Name())
 
-func (d Dag) Get(name string) Target { return nil }
+	if existing != nil {
+		return existing.Merge(t)
+	}
+
+	d[t.Name()] = t
+	return t, nil
+}
+
+func (d Dag) Get(name string) Target {
+	target, _ := d[name]
+	return target
+}
 
 func (d Dag) Apply(t Target, a Action) os.Error {
 	return nil
@@ -159,18 +175,38 @@ func (t DagTarget) Apply(Action) os.Error {
 }
 
 func (t DagTarget) Name() string {
-	return t.name
+	return t.Field
 }
 
 func (t DagTarget) String() string {
 	return "I'm a dag target!"
 }
 
+func DagTargetFactory(s Set, lines []string, fac TargetFactory) (Target, os.Error) {
+	var err os.Error
+	fields := strings.Fields(lines[0])
+	root := new(DagTarget)
+	root.Field = fields[0]
+
+	if len(fields) > 1 {
+		for _, field := range fields[1:] {
+			tmp := new(DagTarget)
+			tmp.Field = field
+			root.Prereqs[field] = tmp
+			_, err = s.Put(tmp)
+		}
+	}
+
+	_, err = s.Put(root)
+
+	return root, err
+}
+
 // Convenience method to run a typical command line.
 // Must execute flag.Parse() before calling.
 func Main(factory TargetFactory, action Action) {
 	flag.Parse()
-	s := new(Dag)
+	s := make(Dag)
 	if first, err := s.AddFile(file, factory); err != nil {
 		fmt.Fprintf(os.Stderr, "dag: %s: %s\n", file, err)
 		os.Exit(1)
