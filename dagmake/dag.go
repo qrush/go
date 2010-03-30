@@ -82,6 +82,11 @@ type (
 	Action func(Target) os.Error
 
 	Dag map[string]Target
+
+	DagTarget struct {
+		name string
+		prereqs map[string]DagTarget
+	}
 )
 
 // Contains the name of the dependency graph file.
@@ -140,6 +145,26 @@ func (d Dag) Apply(t Target, a Action) os.Error {
 }
 
 func (d Dag) String() string { return "I'm a dag!" }
+
+func (t DagTarget) Merge(Target) (Target, os.Error) {
+	return nil, nil
+}
+
+func (t DagTarget) ApplyPreq(Action) os.Error {
+	return nil
+}
+
+func (t DagTarget) Apply(Action) os.Error {
+	return nil
+}
+
+func (t DagTarget) Name() string {
+	return t.name
+}
+
+func (t DagTarget) String() string {
+	return "I'm a dag target!"
+}
 
 // Convenience method to run a typical command line.
 // Must execute flag.Parse() before calling.
