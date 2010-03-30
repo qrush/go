@@ -145,27 +145,12 @@ func (d Dag) Add(strs []string, fac TargetFactory) (string, os.Error) {
 }
 
 func (d Dag) Put(t Target) (Target, os.Error) {
-	existing := d.Get(t.Name())
-	fmt.Printf(">>>>>> PUT %s\n", t)
-
-	if existing != nil {
-		fmt.Printf(">>>>>> MERGE %s => %s\n", existing, t)
-		merged, _ := existing.Merge(t)
-
-		for name, val := range merged.(DagTarget).Prereqs {
-			if existingPrereq := d.Get(name); existingPrereq != nil {
-				if existingPrereq.(*DagTarget).ID != (*val).(*DagTarget).ID {
-					fmt.Println("DANGLING REF")
-				}
-			}
-		}
-
-		fmt.Printf(">>>>>> MAP \n%s\n", d)
-		return merged, nil
+	existing, ok := d[t.Name()]
+	if ok {
+		existing.Merge(t)
+	} else {
+		d[t.Name()] = t
 	}
-
-	fmt.Printf(">>>>>> MAP \n%s\n", d)
-	d[t.Name()] = t
 	return t, nil
 }
 
@@ -188,7 +173,7 @@ func (d Dag) String() string {
 	return out
 }
 
-func (t DagTarget) Merge(newt Target) (Target, os.Error) {
+func (t *DagTarget) Merge(newt Target) (Target, os.Error) {
 	dagTarget := (newt.(*DagTarget))
 
 	for _, prereq := range dagTarget.Prereqs {
@@ -197,7 +182,7 @@ func (t DagTarget) Merge(newt Target) (Target, os.Error) {
 	return t, nil
 }
 
-func (t DagTarget) ApplyPreq(a Action) os.Error {
+func (t *DagTarget) ApplyPreq(a Action) os.Error {
 	for _, prereq := range t.Prereqs {
 		prereq.Apply(a)
 	}
@@ -205,7 +190,7 @@ func (t DagTarget) ApplyPreq(a Action) os.Error {
 	return nil
 }
 
-func (t DagTarget) Apply(a Action) os.Error {
+func (t *DagTarget) Apply(a Action) os.Error {
 	if ! t.Done {
 		t.ApplyPreq(a)
 		t.Done = true
@@ -215,15 +200,15 @@ func (t DagTarget) Apply(a Action) os.Error {
 	return nil
 }
 
-func (t DagTarget) Name() string {
+func (t *DagTarget) Name() string {
 	return t.Field
 }
 
-func (t DagTarget) String() string {
-	out := fmt.Sprintf("%s:%d", t.Name(), t.ID)
+func (t *DagTarget) String() string {
+	out := fmt.Sprintf("%s", t.Name())
 
 	for _, prereq := range t.Prereqs {
-		out = out + " " + prereq.String() //fmt.Sprintf(" %s:%d", prereq.Name(), prereq.(*DagTarget).ID)
+		out = out + " " + prereq.Name() //fmt.Sprintf(" %s:%d", prereq.Name(), prereq.(*DagTarget).ID)
 	}
 
 	return out
@@ -248,9 +233,13 @@ func DagTargetFactory(s Set, lines []string, fac TargetFactory) (Target, os.Erro
 
 	if len(fields) > 1 {
 		for _, field := range fields[1:] {
-			tmp := CreateDagTarget(field)
-			root.(*DagTarget).Prereqs[field] = &tmp
-			_, err = s.Put(tmp)
+			if et := s.Get(field); et != nil {
+				root.(*DagTarget).Prereqs[field] = &et
+			} else {
+				tmp := CreateDagTarget(field)
+				root.(*DagTarget).Prereqs[field] = &tmp
+				_, err = s.Put(tmp)
+			}
 		}
 	}
 
