@@ -163,8 +163,11 @@ func (d Dag) Apply(t Target, a Action) os.Error {
 
 func (d Dag) String() string { return "I'm a dag!" }
 
-func (t DagTarget) Merge(Target) (Target, os.Error) {
-	return nil, nil
+func (t DagTarget) Merge(newt Target) (Target, os.Error) {
+	for _, prereq := range (newt.(*DagTarget)).Prereqs {
+		t.Prereqs[prereq.Name()] = prereq
+	}
+	return t, nil
 }
 
 func (t DagTarget) ApplyPreq(a Action) os.Error {
@@ -203,6 +206,7 @@ func DagTargetFactory(s Set, lines []string, fac TargetFactory) (Target, os.Erro
 	if len(fields) > 1 {
 		for _, field := range fields[1:] {
 			tmp := new(DagTarget)
+			tmp.Prereqs = make(map[string]*DagTarget)
 			tmp.Field = field
 			root.Prereqs[field] = tmp
 			_, err = s.Put(tmp)
@@ -218,7 +222,6 @@ func DagTargetFactory(s Set, lines []string, fac TargetFactory) (Target, os.Erro
 // Must execute flag.Parse() before calling.
 func Main(factory TargetFactory, action Action) {
 	flag.Parse()
-
 	s := make(Dag)
 
 	if first, err := s.AddFile(file, factory); err != nil {
