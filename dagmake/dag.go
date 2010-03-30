@@ -81,14 +81,12 @@ type (
 	// Manipulate a target.
 	Action func(Target) os.Error
 
-	Dag struct {
-		Targets map[string]Target
-		Completed map[string]bool
-	}
+	Dag map[string]Target
 
 	DagTarget struct {
 		Field string
 		Prereqs map[string]*DagTarget
+		Done bool
 	}
 )
 
@@ -150,25 +148,17 @@ func (d Dag) Put(t Target) (Target, os.Error) {
 		return existing.Merge(t)
 	}
 
-	d.Targets[t.Name()] = t
+	d[t.Name()] = t
 	return t, nil
 }
 
 func (d Dag) Get(name string) Target {
-	target, _ := d.Targets[name]
+	target, _ := d[name]
 	return target
 }
 
 func (d Dag) Apply(t Target, a Action) os.Error {
-	done, _ := d.Completed[t.Name()]
-
-	if ! done {
-		t.ApplyPreq(a)
-		d.Targets[t.Name()] = t, true
-		a(t)
-	}
-
-	return nil
+	return t.Apply(a)
 }
 
 func (d Dag) String() string { return "I'm a dag!" }
@@ -177,11 +167,21 @@ func (t DagTarget) Merge(Target) (Target, os.Error) {
 	return nil, nil
 }
 
-func (t DagTarget) ApplyPreq(Action) os.Error {
+func (t DagTarget) ApplyPreq(a Action) os.Error {
+	for _, prereq := range t.Prereqs {
+		prereq.Apply(a)
+	}
+
 	return nil
 }
 
-func (t DagTarget) Apply(Action) os.Error {
+func (t DagTarget) Apply(a Action) os.Error {
+	if ! t.Done {
+		t.ApplyPreq(a)
+		t.Done = true
+		a(t)
+	}
+
 	return nil
 }
 
@@ -198,6 +198,7 @@ func DagTargetFactory(s Set, lines []string, fac TargetFactory) (Target, os.Erro
 	fields := strings.Fields(lines[0])
 	root := new(DagTarget)
 	root.Field = fields[0]
+	root.Prereqs = make(map[string]*DagTarget)
 
 	if len(fields) > 1 {
 		for _, field := range fields[1:] {
@@ -218,9 +219,7 @@ func DagTargetFactory(s Set, lines []string, fac TargetFactory) (Target, os.Erro
 func Main(factory TargetFactory, action Action) {
 	flag.Parse()
 
-	s := new(Dag)
-	s.Targets = make(map[string]Target)
-	s.Completed = make(map[string]bool)
+	s := make(Dag)
 
 	if first, err := s.AddFile(file, factory); err != nil {
 		fmt.Fprintf(os.Stderr, "dag: %s: %s\n", file, err)
