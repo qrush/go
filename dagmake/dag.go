@@ -84,6 +84,7 @@ type (
 	Dag map[string]Target
 
 	DagTarget struct {
+		ID int
 		Field string
 		Prereqs map[string]*Target
 		Done bool
@@ -92,6 +93,8 @@ type (
 
 // Contains the name of the dependency graph file.
 var file string
+
+var NextID int = 0
 
 // Bind file to the -f switch.
 func init() {
@@ -148,24 +151,21 @@ func (d Dag) Put(t Target) (Target, os.Error) {
 	if existing != nil {
 		fmt.Printf(">>>>>> MERGE %s => %s\n", existing, t)
 		merged, _ := existing.Merge(t)
-		d[merged.Name()] = merged
 
-		for _, target := range d {
-			fmt.Println(target.(DagTarget))
-			//for _, prereq := range target.(DagTarget).Prereqs {
-				//if prereq.Name() == merged.Name() {
-					//dagTarget.Prereqs[prereq.Name()] = (&merged)
-					//d[target.Name()] = dagTarget
-				//}
-			//}
+		for name, val := range merged.(DagTarget).Prereqs {
+			if existingPrereq := d.Get(name); existingPrereq != nil {
+				if existingPrereq.(*DagTarget).ID != (*val).(*DagTarget).ID {
+					fmt.Println("DANGLING REF")
+				}
+			}
 		}
 
-		//fmt.Printf(">>>>>> MAP \n%s\n", d)
+		fmt.Printf(">>>>>> MAP \n%s\n", d)
 		return merged, nil
 	}
 
+	fmt.Printf(">>>>>> MAP \n%s\n", d)
 	d[t.Name()] = t
-	//fmt.Printf(">>>>>> MAP \n%s\n", d)
 	return t, nil
 }
 
@@ -182,14 +182,16 @@ func (d Dag) String() string {
 	out := ""
 
 	for key, value := range d {
-		out = out + "KEY:\t" + key + "\tVALUE:\t" + value.String() + "\n"
+		out = out + "KEY:\t" + key + "\t\tVALUE:\t" + value.String() + "\n"
 	}
 
 	return out
 }
 
 func (t DagTarget) Merge(newt Target) (Target, os.Error) {
-	for _, prereq := range (newt.(*DagTarget)).Prereqs {
+	dagTarget := (newt.(*DagTarget))
+
+	for _, prereq := range dagTarget.Prereqs {
 		t.Prereqs[prereq.Name()] = prereq
 	}
 	return t, nil
@@ -218,30 +220,35 @@ func (t DagTarget) Name() string {
 }
 
 func (t DagTarget) String() string {
-	out := t.Name()
+	out := fmt.Sprintf("%s:%d", t.Name(), t.ID)
 
 	for _, prereq := range t.Prereqs {
-		out = out + " " + prereq.Name()
+		out = out + " " + prereq.String() //fmt.Sprintf(" %s:%d", prereq.Name(), prereq.(*DagTarget).ID)
 	}
 
 	return out
 }
 
+func CreateDagTarget(field string) Target {
+	var root Target
+	root = new(DagTarget)
+	root.(*DagTarget).ID = NextID
+	root.(*DagTarget).Field = field
+	root.(*DagTarget).Prereqs = make(map[string]*Target)
+
+	NextID++
+
+	return root
+}
+
 func DagTargetFactory(s Set, lines []string, fac TargetFactory) (Target, os.Error) {
 	var err os.Error
 	fields := strings.Fields(lines[0])
-	var root Target
-	root = new(DagTarget)
-
-	root.(*DagTarget).Field = fields[0]
-	root.(*DagTarget).Prereqs = make(map[string]*Target)
+	root := CreateDagTarget(fields[0])
 
 	if len(fields) > 1 {
 		for _, field := range fields[1:] {
-			var tmp Target
-			tmp = new(DagTarget)
-			tmp.(*DagTarget).Prereqs = make(map[string]*Target)
-			tmp.(*DagTarget).Field = field
+			tmp := CreateDagTarget(field)
 			root.(*DagTarget).Prereqs[field] = &tmp
 			_, err = s.Put(tmp)
 		}
