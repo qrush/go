@@ -85,7 +85,7 @@ type (
 
 	DagTarget struct {
 		Field string
-		Prereqs map[string]*DagTarget
+		Prereqs map[string]*Target
 		Done bool
 	}
 )
@@ -143,12 +143,29 @@ func (d Dag) Add(strs []string, fac TargetFactory) (string, os.Error) {
 
 func (d Dag) Put(t Target) (Target, os.Error) {
 	existing := d.Get(t.Name())
+	fmt.Printf(">>>>>> PUT %s\n", t)
 
 	if existing != nil {
-		return existing.Merge(t)
+		fmt.Printf(">>>>>> MERGE %s => %s\n", existing, t)
+		merged, _ := existing.Merge(t)
+		d[merged.Name()] = merged
+
+		for _, target := range d {
+			fmt.Println(target.(DagTarget))
+			//for _, prereq := range target.(DagTarget).Prereqs {
+				//if prereq.Name() == merged.Name() {
+					//dagTarget.Prereqs[prereq.Name()] = (&merged)
+					//d[target.Name()] = dagTarget
+				//}
+			//}
+		}
+
+		//fmt.Printf(">>>>>> MAP \n%s\n", d)
+		return merged, nil
 	}
 
 	d[t.Name()] = t
+	//fmt.Printf(">>>>>> MAP \n%s\n", d)
 	return t, nil
 }
 
@@ -161,7 +178,15 @@ func (d Dag) Apply(t Target, a Action) os.Error {
 	return t.Apply(a)
 }
 
-func (d Dag) String() string { return "I'm a dag!" }
+func (d Dag) String() string {
+	out := ""
+
+	for key, value := range d {
+		out = out + "KEY:\t" + key + "\tVALUE:\t" + value.String() + "\n"
+	}
+
+	return out
+}
 
 func (t DagTarget) Merge(newt Target) (Target, os.Error) {
 	for _, prereq := range (newt.(*DagTarget)).Prereqs {
@@ -193,22 +218,31 @@ func (t DagTarget) Name() string {
 }
 
 func (t DagTarget) String() string {
-	return t.Name()
+	out := t.Name()
+
+	for _, prereq := range t.Prereqs {
+		out = out + " " + prereq.Name()
+	}
+
+	return out
 }
 
 func DagTargetFactory(s Set, lines []string, fac TargetFactory) (Target, os.Error) {
 	var err os.Error
 	fields := strings.Fields(lines[0])
-	root := new(DagTarget)
-	root.Field = fields[0]
-	root.Prereqs = make(map[string]*DagTarget)
+	var root Target
+	root = new(DagTarget)
+
+	root.(*DagTarget).Field = fields[0]
+	root.(*DagTarget).Prereqs = make(map[string]*Target)
 
 	if len(fields) > 1 {
 		for _, field := range fields[1:] {
-			tmp := new(DagTarget)
-			tmp.Prereqs = make(map[string]*DagTarget)
-			tmp.Field = field
-			root.Prereqs[field] = tmp
+			var tmp Target
+			tmp = new(DagTarget)
+			tmp.(*DagTarget).Prereqs = make(map[string]*Target)
+			tmp.(*DagTarget).Field = field
+			root.(*DagTarget).Prereqs[field] = &tmp
 			_, err = s.Put(tmp)
 		}
 	}
