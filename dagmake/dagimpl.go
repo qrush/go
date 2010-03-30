@@ -61,13 +61,14 @@ func (d Dag) Add(strs []string, fac TargetFactory) (string, os.Error) {
 }
 
 func (d Dag) Put(t Target) (Target, os.Error) {
+	var err os.Error
 	existing, ok := d[t.Name()]
 	if ok {
-		existing.Merge(t)
+		_, err = existing.Merge(t)
 	} else {
 		d[t.Name()] = t
 	}
-	return t, nil
+	return t, err
 }
 
 func (d Dag) Get(name string) Target {
@@ -92,25 +93,32 @@ func (d Dag) String() string {
 func (t *DagTarget) Merge(newt Target) (Target, os.Error) {
 	dagTarget := (newt.(*DagTarget))
 
-	for _, prereq := range dagTarget.Prereqs {
-		t.Prereqs[prereq.Name()] = prereq
+	if newt != nil {
+		for _, prereq := range dagTarget.Prereqs {
+			t.Prereqs[prereq.Name()] = prereq
+		}
+		return t, nil
 	}
-	return t, nil
+	return t, os.NewError("target parameter is nil")
 }
 
 func (t *DagTarget) ApplyPreq(a Action) os.Error {
+	var err os.Error
 	for _, prereq := range t.Prereqs {
-		prereq.Apply(a)
+		err = prereq.Apply(a)
+		if err != nil {
+			return err
+		}
 	}
 
-	return nil
+	return err
 }
 
 func (t *DagTarget) Apply(a Action) os.Error {
 	if ! t.Done {
 		t.ApplyPreq(a)
 		t.Done = true
-		a(t)
+		 return a(t)
 	}
 
 	return nil
