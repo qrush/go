@@ -118,7 +118,11 @@ func (t *DagTarget) Merge(newt Target) (Target, os.Error) {
 	if newt != nil {
 		for _, prereq := range dagTarget.Prereqs {
 			err = (*prereq).(*DagTarget).cyclicCheck(t.Name())
-			t.Prereqs[prereq.Name()] = prereq
+			if err == nil {
+				t.Prereqs[prereq.Name()] = prereq
+			} else {
+				break
+			}
 		}
 		return t, err
 	}
@@ -132,7 +136,9 @@ func (t *DagTarget) cyclicCheck(name string) os.Error {
 		if nestedPrereq.Name() == name {
 			return os.NewError("cyclic prerequisite: " + name)
 		} else {
-			return (*nestedPrereq).(*DagTarget).cyclicCheck(name)
+			if err := (*nestedPrereq).(*DagTarget).cyclicCheck(name); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -203,6 +209,10 @@ func DagTargetFactory(s Set, lines []string, fac TargetFactory) (Target, os.Erro
 				tmp := CreateDagTarget(field)
 				root.(*DagTarget).Prereqs[field] = &tmp
 				_, err = s.Put(tmp)
+
+				if err != nil {
+					return root, err
+				}
 			}
 		}
 	}
