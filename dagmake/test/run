@@ -42,5 +42,20 @@ function fail {
 
 t "-f test/nothere" "dag: test/nothere: stat test/nothere: no such file or directory"
 t "-f test/blankmkfile" "dag: test/blankmkfile: empty file"
+t "" "6
+dag.go
+target.go
+set.go
+dag.6 dag.go target.go set.go
+main.go
+main.6 dag.6 main.go
+6/dag main.6 dag.6
+all 6 6/dag"
+t "-f test/mksimple" "all"
+t "-f test/mkoneprereq" "clean
+all clean"
+t "-f test/mkprereqs" "list
+clean list
+all clean"
 
 echo -e "\n$PASSED passed, $FAILED failed"
