@@ -11,12 +11,14 @@ type (
 	Dag map[string]Target
 
 	DagTarget struct {
-		Field string
-		Prereqs map[string]*Target
-		Done bool
+		Field string	// Name of the target
+		Prereqs map[string]*Target	// Prerequisites for the target
+		Done bool	// True if target has been completed
 	}
 )
 
+// Add or merge targets from the content of a file to the set;
+// on success return name of first target.
 func (d Dag) AddFile(name string, fac TargetFactory) (string, os.Error) {
 	var bytes []byte
 	first := ""
@@ -33,6 +35,8 @@ func (d Dag) AddFile(name string, fac TargetFactory) (string, os.Error) {
 	return first, err
 }
 
+// Add or merge targets from a string of lines to the set;
+// on success return name of first target.
 func (d Dag) AddString(str string, fac TargetFactory) (string, os.Error) {
 	target, err := fac(d, strings.Split(str, "\n", 0), nil)
 
@@ -43,6 +47,8 @@ func (d Dag) AddString(str string, fac TargetFactory) (string, os.Error) {
 	return "", err
 }
 
+// Add or merge targets from a list of lines to the set;
+// on success return name of first target.
 func (d Dag) Add(strs []string, fac TargetFactory) (string, os.Error) {
 	err := os.NewError("empty file")
 	first := ""
@@ -60,6 +66,8 @@ func (d Dag) Add(strs []string, fac TargetFactory) (string, os.Error) {
 	return first, err
 }
 
+// Add or merge one named target to the set;
+// on success return the target in the set.
 func (d Dag) Put(t Target) (Target, os.Error) {
 	var err os.Error
 	existing, ok := d[t.Name()]
@@ -71,15 +79,19 @@ func (d Dag) Put(t Target) (Target, os.Error) {
 	return t, err
 }
 
+// Return target corresponding to a name, if any.
 func (d Dag) Get(name string) Target {
 	target, _ := d[name]
 	return target
 }
 
+// Send an action depth-first to all prerequisites
+// and then to a target itself.
 func (d Dag) Apply(t Target, a Action) os.Error {
 	return t.Apply(a)
 }
 
+// Return a string that displays the DAG object
 func (d Dag) String() string {
 	out := ""
 
@@ -90,6 +102,7 @@ func (d Dag) String() string {
 	return out
 }
 
+// Merge a DAG target into an existing target; return the receiver if successful
 func (t *DagTarget) Merge(newt Target) (Target, os.Error) {
 	dagTarget := (newt.(*DagTarget))
 
@@ -102,6 +115,7 @@ func (t *DagTarget) Merge(newt Target) (Target, os.Error) {
 	return t, os.NewError("target parameter is nil")
 }
 
+// Apply the action to every prerequisite of the target.
 func (t *DagTarget) ApplyPreq(a Action) os.Error {
 	var err os.Error
 	for _, prereq := range t.Prereqs {
@@ -114,6 +128,7 @@ func (t *DagTarget) ApplyPreq(a Action) os.Error {
 	return err
 }
 
+// Apply the given action to the current target and its prereqs, if they exist.
 func (t *DagTarget) Apply(a Action) os.Error {
 	if ! t.Done {
 		t.ApplyPreq(a)
@@ -124,10 +139,12 @@ func (t *DagTarget) Apply(a Action) os.Error {
 	return nil
 }
 
+// Return the name of the current target
 func (t *DagTarget) Name() string {
 	return t.Field
 }
 
+// Return a string showing the current target and all of its prerequisites
 func (t *DagTarget) String() string {
 	out := fmt.Sprintf("%s", t.Name())
 
@@ -138,6 +155,7 @@ func (t *DagTarget) String() string {
 	return out
 }
 
+// Make a brand new target with the given name.
 func CreateDagTarget(field string) Target {
 	var root Target
 	root = new(DagTarget)
@@ -147,6 +165,7 @@ func CreateDagTarget(field string) Target {
 	return root
 }
 
+// Create a target from the given set of lines and add it to the specified Set.
 func DagTargetFactory(s Set, lines []string, fac TargetFactory) (Target, os.Error) {
 	var err os.Error
 	fields := strings.Fields(lines[0])
@@ -169,6 +188,7 @@ func DagTargetFactory(s Set, lines []string, fac TargetFactory) (Target, os.Erro
 	return root, err
 }
 
+// Return a new set of DAG targets.
 func NewSet() Dag {
 	return make(Dag)
 }
