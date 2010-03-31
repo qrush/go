@@ -13,7 +13,7 @@ clean:
 doc:
 	godoc -http=:6060 -path=. & # Now visit http://localhost:6060/pkg/dagmake/?p=dag
 
-bin/$(pkg).$O:
+bin/$(pkg).$O: $g
 	$(GC) $(GCFLAGS) -o $@ $g
 
 $O/$(pkg): main.go

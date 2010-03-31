@@ -27,8 +27,12 @@ func (d Dag) AddFile(name string, fac TargetFactory) (string, os.Error) {
 
 	if err == nil && file.IsRegular() {
 		if bytes, err = ioutil.ReadFile(name); err == nil {
-			blocks := strings.Split(string(bytes), "\n\n", 0)
-			first, err = d.Add(blocks, fac)
+			if len(bytes) == 0 {
+				err = os.NewError("empty file")
+			} else {
+				blocks := strings.Split(string(bytes), "\n\n", 0)
+				first, err = d.Add(blocks, fac)
+			}
 		}
 	}
 
@@ -50,7 +54,7 @@ func (d Dag) AddString(str string, fac TargetFactory) (string, os.Error) {
 // Add or merge targets from a list of lines to the set;
 // on success return name of first target.
 func (d Dag) Add(strs []string, fac TargetFactory) (string, os.Error) {
-	err := os.NewError("empty file")
+	var err os.Error
 	first := ""
 
 	if len(strs) != 0 {
