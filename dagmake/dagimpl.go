@@ -64,6 +64,10 @@ func (d Dag) Add(strs []string, fac TargetFactory) (string, os.Error) {
 			} else {
 				_, err = d.AddString(str, fac)
 			}
+
+			if err != nil {
+				break
+			}
 		}
 	}
 
@@ -113,14 +117,7 @@ func (t *DagTarget) Merge(newt Target) (Target, os.Error) {
 
 	if newt != nil {
 		for _, prereq := range dagTarget.Prereqs {
-
-			// Checking for cyclic prerequisites
-			for _, nestedPrereq := range (*prereq).(*DagTarget).Prereqs {
-				if nestedPrereq.Name() == t.Name() {
-					err = os.NewError("cyclic prerequisite: " + t.Name())
-				}
-			}
-
+			err = (*prereq).(*DagTarget).cyclicCheck(t.Name())
 			t.Prereqs[prereq.Name()] = prereq
 		}
 		return t, err
@@ -128,6 +125,18 @@ func (t *DagTarget) Merge(newt Target) (Target, os.Error) {
 
 	err = os.NewError("target parameter is nil")
 	return t, err
+}
+
+func (t *DagTarget) cyclicCheck(name string) os.Error {
+	for _, nestedPrereq := range t.Prereqs {
+		if nestedPrereq.Name() == name {
+			return os.NewError("cyclic prerequisite: " + name)
+		} else {
+			return (*nestedPrereq).(*DagTarget).cyclicCheck(name)
+		}
+	}
+
+	return nil
 }
 
 // Apply the action to every prerequisite of the target.
