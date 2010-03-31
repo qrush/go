@@ -1,3 +1,9 @@
+///////////////////////////////////////////////////////////////////////////////
+// dagmake
+// dagimpl.go
+// John Floren, Nick Quaranto
+///////////////////////////////////////////////////////////////////////////////
+
 package dag
 
 import (
@@ -11,9 +17,14 @@ type (
 	Dag map[string]Target
 
 	DagTarget struct {
-		Field string	// Name of the target
-		Prereqs map[string]*Target	// Prerequisites for the target
-		Done bool	// True if target has been completed
+		// Name of the target
+		Field string
+
+		// Prerequisites for the target
+		Prereqs map[string]*Target
+
+		// True if target has been completed
+		Done bool
 	}
 )
 
@@ -131,14 +142,13 @@ func (t *DagTarget) Merge(newt Target) (Target, os.Error) {
 	return t, err
 }
 
+// Dive into prerequisites to search for loops
 func (t *DagTarget) cyclicCheck(name string) os.Error {
 	for _, nestedPrereq := range t.Prereqs {
 		if nestedPrereq.Name() == name {
 			return os.NewError("cyclic prerequisite: " + name)
-		} else {
-			if err := (*nestedPrereq).(*DagTarget).cyclicCheck(name); err != nil {
-				return err
-			}
+		} else if err := (*nestedPrereq).(*DagTarget).cyclicCheck(name); err != nil {
+			return err
 		}
 	}
 
@@ -147,15 +157,13 @@ func (t *DagTarget) cyclicCheck(name string) os.Error {
 
 // Apply the action to every prerequisite of the target.
 func (t *DagTarget) ApplyPreq(a Action) os.Error {
-	var err os.Error
 	for _, prereq := range t.Prereqs {
-		err = prereq.Apply(a)
-		if err != nil {
+		if err := prereq.Apply(a); err != nil {
 			return err
 		}
 	}
 
-	return err
+	return nil
 }
 
 // Apply the given action to the current target and its prereqs, if they exist.
@@ -197,7 +205,6 @@ func CreateDagTarget(field string) Target {
 
 // Create a target from the given set of lines and add it to the specified Set.
 func DagTargetFactory(s Set, lines []string, fac TargetFactory) (Target, os.Error) {
-	var err os.Error
 	fields := strings.Fields(lines[0])
 	root := CreateDagTarget(fields[0])
 
@@ -208,17 +215,14 @@ func DagTargetFactory(s Set, lines []string, fac TargetFactory) (Target, os.Erro
 			} else {
 				tmp := CreateDagTarget(field)
 				root.(*DagTarget).Prereqs[field] = &tmp
-				_, err = s.Put(tmp)
-
-				if err != nil {
+				if _, err := s.Put(tmp); err != nil {
 					return root, err
 				}
 			}
 		}
 	}
 
-	_, err = s.Put(root)
-
+	_, err := s.Put(root)
 	return root, err
 }
 
