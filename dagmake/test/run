@@ -57,5 +57,6 @@ all clean"
 t "-f test/mkprereqs" "list
 clean list
 all clean"
+t "-f test/mkcyclic" "dag: test/mkcyclic: cyclic prerequisite: test"
 
 echo -e "\n$PASSED passed, $FAILED failed"

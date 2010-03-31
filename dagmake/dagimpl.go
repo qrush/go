@@ -108,15 +108,26 @@ func (d Dag) String() string {
 
 // Merge a DAG target into an existing target; return the receiver if successful
 func (t *DagTarget) Merge(newt Target) (Target, os.Error) {
+	var err os.Error
 	dagTarget := (newt.(*DagTarget))
 
 	if newt != nil {
 		for _, prereq := range dagTarget.Prereqs {
+
+			// Checking for cyclic prerequisites
+			for _, nestedPrereq := range (*prereq).(*DagTarget).Prereqs {
+				if nestedPrereq.Name() == t.Name() {
+					err = os.NewError("cyclic prerequisite: " + t.Name())
+				}
+			}
+
 			t.Prereqs[prereq.Name()] = prereq
 		}
-		return t, nil
+		return t, err
 	}
-	return t, os.NewError("target parameter is nil")
+
+	err = os.NewError("target parameter is nil")
+	return t, err
 }
 
 // Apply the action to every prerequisite of the target.
@@ -137,7 +148,7 @@ func (t *DagTarget) Apply(a Action) os.Error {
 	if ! t.Done {
 		t.ApplyPreq(a)
 		t.Done = true
-		 return a(t)
+		return a(t)
 	}
 
 	return nil
@@ -153,7 +164,7 @@ func (t *DagTarget) String() string {
 	out := fmt.Sprintf("%s", t.Name())
 
 	for _, prereq := range t.Prereqs {
-		out = out + " " + prereq.Name() //fmt.Sprintf(" %s:%d", prereq.Name(), prereq.(*DagTarget).ID)
+		out = out + " " + prereq.Name()
 	}
 
 	return out
