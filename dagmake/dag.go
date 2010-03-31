@@ -104,8 +104,8 @@ func Main(factory TargetFactory, action Action) {
 		s.Apply(s.Get(first), action)
 
 	} else {
-		fmt.Println("NArg() > 0")
-		fmt.Println(flag.Args())
+//		fmt.Println("NArg() > 0")
+//		fmt.Println(flag.Args())
 		for _, arg := range flag.Args() {
 			if len(arg) > 0 {
 				if target := s.Get(arg); target != nil {

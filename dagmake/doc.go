@@ -1,18 +1,30 @@
 /*
 
-Expr recreates basic functionality of the Unix "expr" command.
-It is implemented as a recursive descent parser, as explained on http://math.hws.edu/javanotes/c9/s5.html. The following BNF, from the same source, was used:
-	<expression>  ::=  [ "-" ] <term> [ ( "+" | "-" ) <term> ]...
-	<term>  ::=  <factor> [ ( "*" | "/" ) <factor> ]...
-	<factor>  ::=  <number>  |  "(" <expression> ")"
+The dag package implements a Directed Acyclic Graph according to the Set and Target interfaces. The command bin/dag uses the dag package to parse and traverse mkfiles.
 
-This expr understands +,-,*,/, and parenthesized expressions. Examples:
-	% ./expr 1 + 2
-	3
-	% ./expr \( 5 + 1 \) \* 2
-	12
-	%./expr 4 \* 2 \* 2 + 1
-	17
+Running it with no arguments loads a file called "mkfile" in the current directory and executes the first target. Giving it the "-f filename" option allows specification of the file name. Any other arguments are taken to be targets which should be executed.
+
+When a mkfile is read and executed, the various targets are traversed in a depth-first fashion; thus, for the example below, targetD would be applied before targetC, since targetC depends on targetD.
+
+Example mkfile:
+
+	targetA	targetB	targetC
+	
+	targetB
+		additional strings (currently ignored)
+
+	targetC	targetD
+
+	targetD
+
+Example command line, default options:
+	% bin/dag
+	targetD
+	targetC targetD
+	targetB
+	targetA targetC targetB
+	%
+
 
 */
 package documentation
