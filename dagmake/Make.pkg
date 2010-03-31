@@ -4,18 +4,24 @@
 # pkg = name of package
 # g = list of source files for package, one must be $(pkg).go
 
-all: $(pkg).$O	; for cmd in $(cmds); do $(MAKE) $O/$$cmd; done
-clean:		; rm -rf bin/*
-doc:		;godoc -http=:6060 -path=. & # Now visit http://localhost:6060/pkg/dagmake/?p=dag
-wc:		; sed -e '/^[ 	]*\//d' -e '/^[ 	]*$$/d' main.go $g | wc -l
+all: bin/$(pkg).$O
+	for cmd in $(cmds); do $(MAKE) $O/$$cmd; done
 
-$(pkg).$O: $g	; $(GC) $(GCFLAGS) -o $@ $g
+clean:
+	rm -rf bin/*
+
+doc:
+	godoc -http=:6060 -path=. & # Now visit http://localhost:6060/pkg/dagmake/?p=dag
+
+bin/$(pkg).$O:
+	$(GC) $(GCFLAGS) -o $@ $g
 
 $O/$(pkg): main.go
-$O/%: $(pkg).$O %.go
+
+$O/%: bin/$(pkg).$O %.go
 	if [ $* = $(pkg) ]; then \
-	  $(GC) $(GCFLAGS) -I . -o bin/main.$O main.go && \
- 	  $(LD) $(LDFLAGS) -L . -o bin/$(pkg) bin/main.$O; \
+	  $(GC) $(GCFLAGS) -I bin/ -o bin/main.$O main.go && \
+	  $(LD) $(LDFLAGS) -L bin/ -o bin/$(pkg) bin/main.$O; \
 	else \
-	  $(GC) $(GCFLAGS) -I . -o bin/$*.$O $*.go && \
-	  $(LD) $(LDFLAGS) -L . -o bin/$(pkg) bin/$*.$O; fi
+	  $(GC) $(GCFLAGS) -I bin/ -o bin/$*.$O $*.go && \
+	  $(LD) $(LDFLAGS) -L bin/ -o bin/$(pkg) bin/$*.$O; fi

@@ -9,7 +9,7 @@ When a mkfile is read and executed, the various targets are traversed in a depth
 Example mkfile:
 
 	targetA	targetB	targetC
-	
+
 	targetB
 		additional strings (currently ignored)
 
