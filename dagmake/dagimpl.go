@@ -30,7 +30,7 @@ func (d Dag) AddFile(name string, fac TargetFactory) (string, os.Error) {
 			if len(bytes) == 0 {
 				err = os.NewError("empty file")
 			} else {
-				blocks := strings.Split(string(bytes), "\n\n", 0)
+				blocks := strings.Split(strings.TrimSpace(string(bytes)), "\n\n", 0)
 				first, err = d.Add(blocks, fac)
 			}
 		}
