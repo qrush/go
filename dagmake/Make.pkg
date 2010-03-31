@@ -6,10 +6,7 @@
 
 all: $(pkg).$O	; for cmd in $(cmds); do $(MAKE) $O/$$cmd; done
 clean:		; rm -rf bin/*
-doc:		; ( godoc -http=:6060 -path=.. & \
-		    sleep 5; open -a Safari http://localhost:6060/pkg/code/$(pkg) \
-					    http://localhost:6060/cmd/code/$(pkg); \
-		    sleep 15; kill $$! )
+doc:		;godoc -http=:6060 -path=. & # Now visit http://localhost:6060/pkg/dagmake/?p=dag
 wc:		; sed -e '/^[ 	]*\//d' -e '/^[ 	]*$$/d' main.go $g | wc -l
 
 $(pkg).$O: $g	; $(GC) $(GCFLAGS) -o $@ $g

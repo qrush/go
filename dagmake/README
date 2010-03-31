@@ -1,0 +1,5 @@
+Make targets:
+all: Build everything
+clean: clean up binaries and object files
+doc: Start the http documentation server. Documentation is at http://localhost:6060/pkg/dagmake
+test: Run some tests.
