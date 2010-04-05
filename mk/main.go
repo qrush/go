@@ -1,0 +1,21 @@
+///////////////////////////////////////////////////////////////////////////////
+// dagmake
+// main.go
+// John Floren, Nick Quaranto
+///////////////////////////////////////////////////////////////////////////////
+
+package main
+
+import (
+	"fmt"
+	"dag"
+	"os"
+)
+
+func main() {
+	dag.Main(dag.DagTargetFactory,
+		func(t dag.Target) os.Error {
+			fmt.Println(t)
+			return nil
+		})
+}
