@@ -4,8 +4,11 @@
 # pkg = name of package
 # g = list of source files for package, one must be $(pkg).go
 
-all: bin/$(pkg).$O
+all: dag bin/$(pkg).$O
 	for cmd in $(cmds); do $(MAKE) $O/$$cmd; done
+
+dag:
+	cd ../dag && $(MAKE)
 
 clean:
 	rm -rf bin/*
