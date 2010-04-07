@@ -1,0 +1,7 @@
+all tdir/tfile
+
+tdir/tfile tdir
+	echo foo > tdir/tfile
+
+tdir
+	mkdir tdir

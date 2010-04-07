@@ -1,0 +1,51 @@
+#!/bin/bash
+
+PASSED=0
+FAILED=0
+
+function t {
+  e "$1"
+  test "$EVAL" = "$2"
+  if [ $? = 0 ]
+  then
+    echo "   PASS: '$1' = '$2'"
+    pass
+  else
+    echo "   FAIL: '$1' = '$2' WAS '$EVAL'"
+    fail
+  fi
+}
+
+function m {
+  if [[ $EVAL =~ $1 ]]
+  then
+    echo "   PASS: =~ '$1'"
+    pass
+  else
+    echo "   FAIL: '$EVAL' !~ '$1' WAS '$EVAL'"
+    fail
+  fi
+}
+
+function e {
+  EVAL=`eval ../../bin/mk $1 2>&1`
+  echo -e ">> WITH args '$1'"
+}
+
+function pass {
+  PASSED=$(($PASSED+1))
+}
+
+function fail {
+  FAILED=$(($FAILED+1))
+}
+
+cd test/scenario1
+t "" "mkdir tdir
+echo foo > tdir/tfile"
+mkdir tdir
+echo foo > tdir/tfile
+t "" ""
+rm -rf tdir
+
+echo -e "\n$PASSED passed, $FAILED failed"
