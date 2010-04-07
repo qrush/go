@@ -40,6 +40,7 @@ function fail {
   FAILED=$(($FAILED+1))
 }
 
+
 cd test/scenario1
 t "" "mkdir tdir
 echo foo > tdir/tfile"
@@ -47,5 +48,21 @@ mkdir tdir
 echo foo > tdir/tfile
 t "" ""
 rm -rf tdir
+cd ../..
+
+
+cd test/scenario2
+t "" "touch file3
+touch file1
+touch file2"
+touch file3
+touch file1
+touch file2
+t "" ""
+sleep 1
+touch file3
+t "" "touch file1"
+rm file*
+cd ../..
 
 echo -e "\n$PASSED passed, $FAILED failed"
