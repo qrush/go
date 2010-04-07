@@ -8,7 +8,7 @@ import (
 
 type MkTarget struct {
 	dag.Target
-	commands []string
+	Commands []string
 }
 
 func NewTarget(set dag.Set, lines []string, factory dag.TargetFactory) (dag.Target, os.Error) {
@@ -40,7 +40,40 @@ func (result *MkTarget) Init(set dag.Set, lines []string, factory dag.TargetFact
 	return &MkTarget{t, lines[1:]}, nil
 }
 
+/*
+func (this *MkTarget) ApplyPreq(action Action) os.Error {
+	t := this.Target.(*dag.TargetImpl)
+	if !t.Done {
+		if t.Preq != nil {
+			if t.mark {
+				return os.NewError(t.name + ": cyclic")
+			}
+			t.mark = true
+			for _, p := range t.Preq {
+				if err := action(p); err != nil {
+					return err
+				}
+			}
+			t.mark = false
+		}
+	}
+	return nil
+}
+*/
+
+func (this *MkTarget) Apply(action dag.Action) os.Error {
+	t := this.Target.(*dag.TargetImpl)
+	if !t.Done {
+		t.Done = true
+		return action(this)
+	}
+	return nil
+}
+
 func Print(target dag.Target) os.Error {
-	fmt.Println("fffffuuuuuu")
+	t := target.(*MkTarget)
+	impl := t.Target.(*dag.TargetImpl)
+	fmt.Println(impl.Name())
+	fmt.Println(t.Commands)
 	return nil
 }
