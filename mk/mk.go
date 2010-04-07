@@ -75,10 +75,35 @@ func (this *MkTarget) Apply(action dag.Action) os.Error {
 	return nil
 }
 
+func printcommands(c []string) {
+	if len(c) != 0 {
+		for _, s := range c {
+			fmt.Println(s)
+		}
+	}
+}
+
 func Print(target dag.Target) os.Error {
 	t := target.(*MkTarget)
 	impl := t.Target.(*dag.TargetImpl)
-	fmt.Println(impl.Name())
-	fmt.Println(t.Commands)
+
+	if dtop, err := os.Stat(impl.Name()); err == nil {
+		for _, p := range impl.Preq {
+			pt := p.(*MkTarget)
+			pimpl := pt.Target.(*dag.TargetImpl)
+			if d, err := os.Stat(pimpl.Name()); err == nil {
+				if d.Mtime_ns > dtop.Mtime_ns {
+					printcommands(t.Commands)
+				}
+			} else {
+				printcommands(t.Commands)
+			}
+		}
+	} else {
+		printcommands(t.Commands)
+	}
+			
+//	fmt.Println(impl.Name())
+//	fmt.Println(t.Commands)
 	return nil
 }
