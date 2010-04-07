@@ -11,7 +11,7 @@ clean:
 	rm -rf bin/*
 
 doc:
-	godoc -http=:6060 -path=. & # Now visit http://localhost:6060/pkg/dagmake/?p=dag
+	godoc -http=:6060 -path=. & # Now visit http://localhost:6060/pkg/<pkgname> or http://localhost:6060/cmd/<cmdname>
 
 bin/$(pkg).$O: $g
 	$(GC) $(GCFLAGS) -o $@ $g

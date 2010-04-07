@@ -41,11 +41,13 @@ func (this *MkTarget) Merge(t dag.Target) (dag.Target, os.Error) {
 	return this, nil
 }
 
+// Initialize a MkTarget. Basically just calls the dag.NewTarget and returns.
 func (result *MkTarget) Init(set dag.Set, lines []string, factory dag.TargetFactory) (dag.Target, os.Error) {
 	t, _ := dag.NewTarget(set, lines, factory)
 	return &MkTarget{t, lines[1:]}, nil
 }
 
+// Supercede the TargetImpl Apply function to do actions on a MkTarget
 func (this *MkTarget) Apply(action dag.Action) os.Error {
 	t := this.Target.(*dag.TargetImpl)
 	if !t.Done {
@@ -55,6 +57,7 @@ func (this *MkTarget) Apply(action dag.Action) os.Error {
 	return nil
 }
 
+// Internal function to print the list of commands properly.
 func printcommands(c []string) {
 	if len(c) != 0 {
 		for _, s := range c {
@@ -63,6 +66,8 @@ func printcommands(c []string) {
 	}
 }
 
+// An Action to check timestamps and print out commands if an update
+// is needed.
 func Print(target dag.Target) os.Error {
 	t := target.(*MkTarget)
 	impl := t.Target.(*dag.TargetImpl)
