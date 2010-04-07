@@ -1,7 +1,0 @@
-all	6
-
-6 all
-  mkdir 6
-
-6/dag	main.6 dag.6
-  6l -o 6/dag -L . main.6

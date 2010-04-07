@@ -17,11 +17,9 @@ only once.
 package dag
 
 import (
-	//	"io/ioutil"
 	"flag"
 	"fmt"
 	"os"
-	//	"strings"
 )
 
 type (
@@ -92,29 +90,26 @@ func init() {
 
 // Convenience method to run a typical command line.
 // Must execute flag.Parse() before calling.
-func Main(factory TargetFactory, action Action) {
-	flag.Parse()
+func Main(factory TargetFactory, action Action) os.Error {
 	s := NewSet()
-
 	if first, err := s.AddFile(file, factory); err != nil {
 		fmt.Fprintf(os.Stderr, "dag: %s: %s\n", file, err)
 		os.Exit(1)
 
 	} else if flag.NArg() == 0 {
-		s.Apply(s.Get(first), action)
+		return s.Apply(s.Get(first), action)
 
 	} else {
-		//		fmt.Println("NArg() > 0")
-		//		fmt.Println(flag.Args())
 		for _, arg := range flag.Args() {
 			if len(arg) > 0 {
-				if target := s.Get(arg); target != nil {
-					s.Apply(target, action)
-				} else {
+				if target := s.Get(arg); target == nil {
 					fmt.Fprintf(os.Stderr, "dag: %s: undefined target\n", arg)
 					os.Exit(1)
+				} else if err := s.Apply(target, action); err != nil {
+				  return err
 				}
 			}
 		}
 	}
+  return nil
 }

@@ -1,7 +1,0 @@
-Make targets:
-all: Build everything
-clean: clean up binaries and object files
-doc: Start the http documentation server. Documentation is at http://localhost:6060/pkg/dagmake
-test: Run some tests.
-
-The binary will be saved as "bin/dag". Running it with no arguments loads a file called "mkfile" in the current directory and executes the first target. Giving it the "-f filename" option allows specification of the file name. Any other arguments are taken to be targets which should be executed.

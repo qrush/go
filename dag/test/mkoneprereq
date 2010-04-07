@@ -1,4 +1,0 @@
-all clean
-
-clean
-  rm -rf [568vq] *.[568vq]

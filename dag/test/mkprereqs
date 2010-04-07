@@ -1,7 +1,0 @@
-all clean
-
-clean list
-  rm -rf [568vq] *.[568vq]
-
-list
-  ls -lah

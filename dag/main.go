@@ -1,21 +1,16 @@
-///////////////////////////////////////////////////////////////////////////////
-// dagmake
-// main.go
-// John Floren, Nick Quaranto
-///////////////////////////////////////////////////////////////////////////////
-
 package main
 
 import (
-	"fmt"
 	"dag"
+	"flag"
+	"fmt"
 	"os"
 )
 
 func main() {
-	dag.Main(dag.DagTargetFactory,
-		func(t dag.Target) os.Error {
-			fmt.Println(t)
-			return nil
-		})
+	flag.Parse()
+	if err := dag.Main(dag.NewTarget, dag.Print); err != nil {
+	  fmt.Println(err)
+	  os.Exit(1)
+	}
 }

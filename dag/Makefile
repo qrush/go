@@ -1,8 +1,7 @@
+
 cmds = dag
 pkg = dag
-g = dag.go dagimpl.go
+g = dag.go set.go target.go
 
 include $(GOROOT)/src/Make.$(GOARCH)
 include ../Make.pkg
-
-test: all; ./test/run
