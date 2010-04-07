@@ -6,11 +6,13 @@ import (
 	"os"
 )
 
+/* Our new mk target will include a pointer to the old dag target */
 type MkTarget struct {
 	dag.Target
-	Commands []string
+	Commands []string // The commands that accompany this target
 }
 
+// Create a new MkTarget.
 func NewTarget(set dag.Set, lines []string, factory dag.TargetFactory) (dag.Target, os.Error) {
 	result := new(MkTarget)
 	return result.Init(set, lines, factory)
@@ -43,28 +45,6 @@ func (result *MkTarget) Init(set dag.Set, lines []string, factory dag.TargetFact
 	t, _ := dag.NewTarget(set, lines, factory)
 	return &MkTarget{t, lines[1:]}, nil
 }
-
-/*
-func (this *MkTarget) ApplyPreq(action dag.Action) os.Error {
-	t := this.Target.(*dag.TargetImpl)
-	if !t.Done {
-		if t.Preq != nil {
-			if t.mark {
-				return os.NewError(t.name + ": cyclic")
-			}
-			t.mark = true
-			for _, p := range t.Preq {
-				if err := action(p); err != nil {
-					return err
-				}
-			}
-			t.mark = false
-		}
-	}
-	return nil
-}
-*/
-
 
 func (this *MkTarget) Apply(action dag.Action) os.Error {
 	t := this.Target.(*dag.TargetImpl)
@@ -102,8 +82,5 @@ func Print(target dag.Target) os.Error {
 	} else {
 		printcommands(t.Commands)
 	}
-			
-//	fmt.Println(impl.Name())
-//	fmt.Println(t.Commands)
 	return nil
 }
