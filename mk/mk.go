@@ -32,6 +32,10 @@ func (this *MkTarget) Merge(t dag.Target) (dag.Target, os.Error) {
 		}
 	}
 
+	if len(this.Commands) == 0 {
+		this.Commands = target.Commands
+	}
+
 	return this, nil
 }
 
@@ -41,7 +45,7 @@ func (result *MkTarget) Init(set dag.Set, lines []string, factory dag.TargetFact
 }
 
 /*
-func (this *MkTarget) ApplyPreq(action Action) os.Error {
+func (this *MkTarget) ApplyPreq(action dag.Action) os.Error {
 	t := this.Target.(*dag.TargetImpl)
 	if !t.Done {
 		if t.Preq != nil {
@@ -60,6 +64,7 @@ func (this *MkTarget) ApplyPreq(action Action) os.Error {
 	return nil
 }
 */
+
 
 func (this *MkTarget) Apply(action dag.Action) os.Error {
 	t := this.Target.(*dag.TargetImpl)
