@@ -4,6 +4,6 @@ import "matrix"
 import "fmt"
 
 func main() {
-	m := matrix.Zeros()
+	m, _ := matrix.Zeros(3, 3)
 	fmt.Println(m)
 }

@@ -5,8 +5,8 @@ depth-first traversals.
 
 Usage:
   dag [-f file] target...
-  
-The default file is mkfile, the default target is the first 
+
+The default file is mkfile, the default target is the first
 target in the file.
 
 The file contains blocks for targets, separated by one or more

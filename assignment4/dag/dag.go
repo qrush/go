@@ -106,10 +106,10 @@ func Main(factory TargetFactory, action Action) os.Error {
 					fmt.Fprintf(os.Stderr, "dag: %s: undefined target\n", arg)
 					os.Exit(1)
 				} else if err := s.Apply(target, action); err != nil {
-				  return err
+					return err
 				}
 			}
 		}
 	}
-  return nil
+	return nil
 }

@@ -10,7 +10,7 @@ type MatrixInt interface {
 
 type Matrix struct {
 	rows, cols int
-	data []float64
+	data       []float64
 }
 
 func Zeros(rows, cols int) (ret *Matrix, err os.Error) {
@@ -20,4 +20,3 @@ func Zeros(rows, cols int) (ret *Matrix, err os.Error) {
 	ret.cols = cols
 	return
 }
-	
