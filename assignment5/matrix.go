@@ -29,30 +29,46 @@ type Matrix struct {
 	data       []float
 }
 
-func Zeros(rows, cols int) (ret *Matrix, err os.Error) {
+func Zeros(rows, cols int) (*MatrixInt, os.Error) {
+	var ret MatrixInt
 	ret = new(Matrix)
-	ret.data = make([]float, rows*cols)
-	ret.rows = rows
-	ret.cols = cols
-	return
+	ret.(*Matrix).data = make([]float, rows*cols)
+	ret.(*Matrix).rows = rows
+	ret.(*Matrix).cols = cols
+	return &ret, nil
 }
 
-func Ones(rows, cols int) (ret *Matrix, err os.Error) {
+func Ones(rows, cols int) (*MatrixInt, os.Error) {
+	var ret MatrixInt
 	ret = new(Matrix)
-	ret.data = make([]float, rows*cols)
-	for i := range ret.data {
-		ret.data[i] = 1
+	ret.(*Matrix).data = make([]float, rows*cols)
+	for i := range ret.(*Matrix).data {
+		ret.(*Matrix).data[i] = 1
 	}
-	ret.rows = rows
-	ret.cols = cols
-	return
+	ret.(*Matrix).rows = rows
+	ret.(*Matrix).cols = cols
+	return &ret, nil
+}
+
+func (this *Matrix) String() string {
+	var s string
+	s += "[\n"
+	for i := 0; i < this.Rows(); i++ {
+		s += "	["
+		for j := 0; j < this.Cols(); j++ {
+			s += fmt.Sprintf(" %f", this.Get(i,j))
+		}
+		s += " ]\n"
+	}
+	s += "]\n"
+	return s
 }
 
 func (this *Matrix) Rows() int { return this.rows }
 
 func (this *Matrix) Cols() int { return this.cols }
 
-func (this *Matrix) Add(m *Matrix) os.Error {
+func (this *Matrix) Add(m *MatrixInt) os.Error {
 	if this.Rows() != m.Rows() || this.Cols() != m.Cols() {
 		return os.NewError("Matrix dimensions do not match")
 	}
@@ -61,52 +77,52 @@ func (this *Matrix) Add(m *Matrix) os.Error {
 			this.Set(i,j, this.Get(i,j) + m.Get(i,j))
 		}
 	}
-	/*for i := range this.data {
-		this.data[i] = this.data[i] + m.data[i]
-	}*/
 	return nil
 }
 
-func (this *Matrix) Plus(m *Matrix) (*Matrix, os.Error) {
-	ret := new(Matrix)
-	if this.rows != m.rows || this.cols != m.cols {
+func (this *Matrix) Plus(m *MatrixInt) (*MatrixInt, os.Error) {
+	if this.Rows() != m.Rows() || this.Cols() != m.Cols() {
 		return nil, os.NewError("Matrix dimensions do not match")
 	}
-	ret.data = make([]float, this.rows*this.cols)
-	for i := range this.data {
-		ret.data[i] = this.data[i] + m.data[i]
+	//ret.data = make([]float, this.rows*this.cols)
+	var ret *MatrixInt
+	ret,_ = Zeros(this.Rows(), this.Cols())
+	for i := 0; i < this.Rows(); i++ {
+		for j := 0; j < this.Cols(); j++ {
+			ret.Set(i,j, this.Get(i,j) + m.Get(i,j))
+		}
 	}
-	ret.rows = this.rows
-	ret.cols = this.cols
 	return ret, nil
 }
 
 func (this *Matrix) Get(row, col int) float {
-	if (row < this.rows) && (col < this.cols) && (row >= 0) && (col >= 0) {
-		return this.data[(row*this.cols)+col]
+	if (row < this.Rows()) && (col < this.Cols()) && (row >= 0) && (col >= 0) {
+		return this.data[(row*this.Cols())+col]
 	}
-	//return 0, os.NewError("Invalid row/col index")
 	fmt.Println("invalid row/col index")
 	return 0 // this is wrong
 }
 
 func (this *Matrix) Set(row, col int, val float) {
-	this.data[(row*this.cols)+col] = val
+	this.data[(row*this.Cols())+col] = val
 }
 
-func (this *Matrix) Multiply(m *Matrix) (*Matrix, os.Error) {
-	if this.cols != m.rows {
+func (this *Matrix) Multiply(m *MatrixInt) (*MatrixInt, os.Error) {
+	if this.Cols() != m.Rows() {
 		return nil, os.NewError("Invalid matrix dimensions for Multiply")
 	}
+/*
 	ret := new(Matrix)
 	ret.data = make([]float, this.rows*m.cols)
 	ret.rows = this.rows
 	ret.cols = m.cols
+*/
+	ret,_ := Zeros(this.Rows(), this.Cols())
 
-	for i := 0; i < this.rows; i++ {
-		for j := 0; j < m.cols; j++ {
+	for i := 0; i < this.Rows(); i++ {
+		for j := 0; j < m.Cols(); j++ {
 			var sum float
-			for k := 0; k < this.cols; k++ {
+			for k := 0; k < this.Cols(); k++ {
 				sum += this.Get(i, k) * m.Get(k, j)
 			}
 			ret.Set(i, j, sum)
@@ -115,7 +131,7 @@ func (this *Matrix) Multiply(m *Matrix) (*Matrix, os.Error) {
 	return ret, nil
 }
 
-func (this *Matrix) Slice(rstart, rend, cstart, cend int) (*Matrix, os.Error) {
+func (this *Matrix) Slice(rstart, rend, cstart, cend int) (*MatrixInt, os.Error) {
 	if rstart >= rend || cstart >= cend {
 		return nil, os.NewError("Invalid start/end specification")
 	}
