@@ -52,15 +52,18 @@ func Ones(rows, cols int) (*Matrix, os.Error) {
 
 func (this *DenseMatrix) String() string {
 	var s string
-	s += "[\n"
+	s += "["
 	for i := 0; i < this.Rows(); i++ {
 		s += "	["
 		for j := 0; j < this.Cols(); j++ {
 			s += fmt.Sprintf(" %f", this.Get(i,j))
 		}
-		s += " ]\n"
+		s += "]"
+		if i != this.Rows() - 1 {
+			s += " \n"
+		}
 	}
-	s += "]\n"
+	s += "	]"
 	return s
 }
 
