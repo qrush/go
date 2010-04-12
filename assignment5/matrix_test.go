@@ -15,13 +15,7 @@ func TestZeroMatrix(t *testing.T) {
 		t.Error("Wrong number of columns")
 	}
 
-	for i := 0; i < m.Rows(); i++ {
-		for j := 0; j < m.Cols(); j++ {
-			if m.Get(i, j) != 0 {
-				t.Error("Not zeroed matrix")
-			}
-		}
-	}
+	checkAll(0, "Didn't zero properly", m, t)
 }
 
 func TestOnesMatrix(t *testing.T) {
@@ -34,10 +28,26 @@ func TestOnesMatrix(t *testing.T) {
 		t.Error("Wrong number of columns")
 	}
 
+	checkAll(1, "Didn't one properly", m, t)
+}
+
+func TestAddMatrix(t *testing.T) {
+	m1, _ := Ones(3, 3)
+	m2, _ := Ones(3, 3)
+	m1.Add(m2)
+	checkAll(2, "Didn't add to 2 properly", m1, t)
+	m1.Add(m2)
+	checkAll(3, "Didn't add to 3 properly", m1, t)
+	m1.Add(m2)
+	m1.Add(m2)
+	checkAll(5, "Didn't add to 5 properly", m1, t)
+}
+
+func checkAll(val float, error string, m *Matrix, t *testing.T) {
 	for i := 0; i < m.Rows(); i++ {
 		for j := 0; j < m.Cols(); j++ {
-			if m.Get(i, j) != 1 {
-				t.Error("Not one'd matrix")
+			if m.Get(i, j) != val {
+				t.Error(error)
 			}
 		}
 	}
