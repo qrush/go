@@ -5,7 +5,6 @@ import (
 	"fmt"
 )
 
-type Elem interface{}
 
 type MatrixInt interface {
 	Add(*MatrixInt) os.Error // Modifies target matrix
@@ -14,13 +13,15 @@ type MatrixInt interface {
 
 	Multiply(*MatrixInt) (*MatrixInt, os.Error) // Returns matrix product if successful
 
-	Get(int, int) Elem // Get the element at the given row & column
+	Get(int, int) float // Get the element at the given row & column
 
-	Set(int, int, Elem) // Set the specified element
+	Set(int, int, float) // Set the specified element
 
 	Rows() int
 
 	Cols() int
+
+	Slice(int, int, int, int) (*MatrixInt, os.Error)
 }
 
 type Matrix struct {
@@ -52,12 +53,17 @@ func (this *Matrix) Rows() int { return this.rows }
 func (this *Matrix) Cols() int { return this.cols }
 
 func (this *Matrix) Add(m *Matrix) os.Error {
-	if this.rows != m.rows || this.cols != m.cols {
+	if this.Rows() != m.Rows() || this.Cols() != m.Cols() {
 		return os.NewError("Matrix dimensions do not match")
 	}
-	for i := range this.data {
-		this.data[i] = this.data[i] + m.data[i]
+	for i := 0; i < this.Rows(); i++ {
+		for j := 0; j < this.Cols(); j++ {
+			this.Set(i,j, this.Get(i,j) + m.Get(i,j))
+		}
 	}
+	/*for i := range this.data {
+		this.data[i] = this.data[i] + m.data[i]
+	}*/
 	return nil
 }
 
