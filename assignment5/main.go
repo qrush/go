@@ -8,7 +8,7 @@ func main() {
 	fmt.Println(m)
 	n, _ := matrix.Ones(3, 3)
 	fmt.Println(n)
-	o,_ := matrix.Ones(3, 3)
+	o, _ := matrix.Ones(3, 3)
 	n.Add(o)
 	fmt.Println(n)
 	o.Add(n)
@@ -20,5 +20,5 @@ func main() {
 	}
 	res, _ := n.Multiply(o)
 	fmt.Println(res)
-	
+
 }

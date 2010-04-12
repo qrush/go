@@ -6,7 +6,7 @@ import (
 
 func TestZeroMatrix(t *testing.T) {
 	m, _ := Zeros(3, 3)
-	if m.Rows() != 4 {
+	if m.Rows() != 3 {
 		t.Fail()
 	}
 
