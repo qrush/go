@@ -6,12 +6,12 @@ import (
 )
 
 
-type MatrixInt interface {
-	Add(*MatrixInt) os.Error // Modifies target matrix
+type Matrix interface {
+	Add(*Matrix) os.Error // Modifies target matrix
 
-	Plus(*MatrixInt) (*MatrixInt, os.Error) // Does not modify target
+	Plus(*Matrix) (*Matrix, os.Error) // Does not modify target
 
-	Multiply(*MatrixInt) (*MatrixInt, os.Error) // Returns matrix product if successful
+	Multiply(*Matrix) (*Matrix, os.Error) // Returns matrix product if successful
 
 	Get(int, int) float // Get the element at the given row & column
 
@@ -21,36 +21,36 @@ type MatrixInt interface {
 
 	Cols() int
 
-	Slice(int, int, int, int) (*MatrixInt, os.Error)
+	Slice(int, int, int, int) (*Matrix, os.Error)
 }
 
-type Matrix struct {
+type DenseMatrix struct {
 	rows, cols int
 	data       []float
 }
 
-func Zeros(rows, cols int) (*MatrixInt, os.Error) {
-	var ret MatrixInt
-	ret = new(Matrix)
-	ret.(*Matrix).data = make([]float, rows*cols)
-	ret.(*Matrix).rows = rows
-	ret.(*Matrix).cols = cols
+func Zeros(rows, cols int) (*Matrix, os.Error) {
+	var ret Matrix
+	ret = new(DenseMatrix)
+	ret.(*DenseMatrix).data = make([]float, rows*cols)
+	ret.(*DenseMatrix).rows = rows
+	ret.(*DenseMatrix).cols = cols
 	return &ret, nil
 }
 
-func Ones(rows, cols int) (*MatrixInt, os.Error) {
-	var ret MatrixInt
-	ret = new(Matrix)
-	ret.(*Matrix).data = make([]float, rows*cols)
-	for i := range ret.(*Matrix).data {
-		ret.(*Matrix).data[i] = 1
+func Ones(rows, cols int) (*Matrix, os.Error) {
+	var ret Matrix
+	ret = new(DenseMatrix)
+	ret.(*DenseMatrix).data = make([]float, rows*cols)
+	for i := range ret.(*DenseMatrix).data {
+		ret.(*DenseMatrix).data[i] = 1
 	}
-	ret.(*Matrix).rows = rows
-	ret.(*Matrix).cols = cols
+	ret.(*DenseMatrix).rows = rows
+	ret.(*DenseMatrix).cols = cols
 	return &ret, nil
 }
 
-func (this *Matrix) String() string {
+func (this *DenseMatrix) String() string {
 	var s string
 	s += "[\n"
 	for i := 0; i < this.Rows(); i++ {
@@ -64,11 +64,11 @@ func (this *Matrix) String() string {
 	return s
 }
 
-func (this *Matrix) Rows() int { return this.rows }
+func (this *DenseMatrix) Rows() int { return this.rows }
 
-func (this *Matrix) Cols() int { return this.cols }
+func (this *DenseMatrix) Cols() int { return this.cols }
 
-func (this *Matrix) Add(m *MatrixInt) os.Error {
+func (this *DenseMatrix) Add(m *Matrix) os.Error {
 	if this.Rows() != m.Rows() || this.Cols() != m.Cols() {
 		return os.NewError("Matrix dimensions do not match")
 	}
@@ -80,12 +80,12 @@ func (this *Matrix) Add(m *MatrixInt) os.Error {
 	return nil
 }
 
-func (this *Matrix) Plus(m *MatrixInt) (*MatrixInt, os.Error) {
+func (this *DenseMatrix) Plus(m *Matrix) (*Matrix, os.Error) {
 	if this.Rows() != m.Rows() || this.Cols() != m.Cols() {
 		return nil, os.NewError("Matrix dimensions do not match")
 	}
 	//ret.data = make([]float, this.rows*this.cols)
-	var ret *MatrixInt
+	var ret *Matrix
 	ret,_ = Zeros(this.Rows(), this.Cols())
 	for i := 0; i < this.Rows(); i++ {
 		for j := 0; j < this.Cols(); j++ {
@@ -95,7 +95,7 @@ func (this *Matrix) Plus(m *MatrixInt) (*MatrixInt, os.Error) {
 	return ret, nil
 }
 
-func (this *Matrix) Get(row, col int) float {
+func (this *DenseMatrix) Get(row, col int) float {
 	if (row < this.Rows()) && (col < this.Cols()) && (row >= 0) && (col >= 0) {
 		return this.data[(row*this.Cols())+col]
 	}
@@ -103,16 +103,16 @@ func (this *Matrix) Get(row, col int) float {
 	return 0 // this is wrong
 }
 
-func (this *Matrix) Set(row, col int, val float) {
+func (this *DenseMatrix) Set(row, col int, val float) {
 	this.data[(row*this.Cols())+col] = val
 }
 
-func (this *Matrix) Multiply(m *MatrixInt) (*MatrixInt, os.Error) {
+func (this *DenseMatrix) Multiply(m *Matrix) (*Matrix, os.Error) {
 	if this.Cols() != m.Rows() {
 		return nil, os.NewError("Invalid matrix dimensions for Multiply")
 	}
 /*
-	ret := new(Matrix)
+	ret := new(DenseMatrix)
 	ret.data = make([]float, this.rows*m.cols)
 	ret.rows = this.rows
 	ret.cols = m.cols
@@ -131,7 +131,7 @@ func (this *Matrix) Multiply(m *MatrixInt) (*MatrixInt, os.Error) {
 	return ret, nil
 }
 
-func (this *Matrix) Slice(rstart, rend, cstart, cend int) (*MatrixInt, os.Error) {
+func (this *DenseMatrix) Slice(rstart, rend, cstart, cend int) (*Matrix, os.Error) {
 	if rstart >= rend || cstart >= cend {
 		return nil, os.NewError("Invalid start/end specification")
 	}
