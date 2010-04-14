@@ -128,7 +128,7 @@ func (this *DenseMatrix) Multiply(m *Matrix) (*Matrix, os.Error) {
 	if this.Cols() != m.Rows() {
 		return nil, os.NewError("Invalid matrix dimensions for Multiply")
 	}
-	ret, _ := Zeros(this.Rows(), this.Cols())
+	ret, _ := Zeros(this.Rows(), m.Cols())
 
 	for i := 0; i < this.Rows(); i++ {
 		for j := 0; j < m.Cols(); j++ {
