@@ -21,12 +21,12 @@ func main() {
 	res, _ := n.Multiply(o)
 	fmt.Println(res)
 
-	zz := matrix.Zeros(4,4)
-	zz.Set(0,0,1)
-	zz.Set(1,1,1)
-	zz.Set(2,2,1)
-	zz.Set(3,3,1)
+	zz := matrix.Zeros(4, 4)
+	zz.Set(0, 0, 1)
+	zz.Set(1, 1, 1)
+	zz.Set(2, 2, 1)
+	zz.Set(3, 3, 1)
 	fmt.Println(zz)
-	foo, _ := zz.Slice(0,2,0,2)
+	foo, _ := zz.Slice(0, 2, 0, 2)
 	fmt.Println(zz)
 }

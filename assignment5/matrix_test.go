@@ -3,6 +3,7 @@ package matrix
 import (
 	"testing"
 	"fmt"
+	"strings"
 )
 
 func TestZeroMatrix(t *testing.T) {
@@ -43,6 +44,72 @@ func TestAddMatrix(t *testing.T) {
 	checkAll(5, "Didn't add to 5 properly", m1, t)
 }
 
+func TestFourByThreeMatrixString(t *testing.T) {
+	m, _ := Ones(4, 3)
+	mstr := fmt.Sprintf("%s", *m)
+	split := strings.Split(mstr[1:len(mstr)-1], "\n", 0)
+	if len(split) != 4 {
+		t.Error("Wrong number of lines")
+	}
+
+	for _, line := range split {
+		str := strings.TrimSpace(line)
+		if str != "[ 1.000000 1.000000 1.000000]" {
+			t.Error("Wrong contents: '" + str + "'")
+		}
+	}
+}
+
+func TestThreeByThreeMatrixString(t *testing.T) {
+	n, _ := Ones(3, 3)
+	nstr := fmt.Sprintf("%s", *n)
+	split := strings.Split(nstr[1:len(nstr)-1], "\n", 0)
+	if len(split) != 3 {
+		t.Error("Wrong number of lines")
+	}
+
+	for _, line := range split {
+		str := strings.TrimSpace(line)
+		if str != "[ 1.000000 1.000000 1.000000]" {
+			t.Error("Wrong contents: '" + str + "'")
+		}
+	}
+}
+
+func TestAddingThreeByThreeMatrixString(t *testing.T) {
+	n, _ := Ones(3, 3)
+	o, _ := Ones(3, 3)
+	n.Add(o)
+
+	nstr := fmt.Sprintf("%s", *n)
+	split := strings.Split(nstr[1:len(nstr)-1], "\n", 0)
+	if len(split) != 3 {
+		t.Error("Wrong number of lines")
+	}
+
+	for _, line := range split {
+		str := strings.TrimSpace(line)
+		if str != "[ 2.000000 2.000000 2.000000]" {
+			t.Error("Wrong contents: '" + str + "'")
+		}
+	}
+}
+
+func TestAddingWrongSizes(t *testing.T) {
+	n, _ := Ones(3, 3)
+	o, _ := Ones(4, 3)
+	n.Add(o)
+
+	if _, err := n.Plus(o); err != nil {
+		msg := fmt.Sprintf("%s", err)
+		if msg != "Matrix dimensions do not match" {
+			t.Error("Wrong error message: '" + msg + "'")
+		}
+	} else {
+		t.Error("Did not return error for wrong matrix sizes")
+	}
+}
+
 func checkAll(val float, error string, m *Matrix, t *testing.T) {
 	for i := 0; i < m.Rows(); i++ {
 		for j := 0; j < m.Cols(); j++ {
@@ -51,32 +118,4 @@ func checkAll(val float, error string, m *Matrix, t *testing.T) {
 			}
 		}
 	}
-}
-
-func TestIHateNick(t *testing.T) {
-        m, _ := Ones(4, 3)
-        fmt.Println(*m)
-        n, _ := Ones(3, 3)
-        fmt.Println(*n)
-        o, _ := Ones(3, 3)
-        n.Add(o)
-        fmt.Println(*n)
-        o.Add(n)
-        fmt.Println(*o)
-        if added, err := m.Plus(o); err != nil {
-                fmt.Println(err)
-        } else {
-                fmt.Println(*added)
-        }
-        res, _ := n.Multiply(o)
-        fmt.Println(*res)
-
-        zz,_ := Zeros(4,4)
-        zz.Set(0,0,1)
-        zz.Set(1,1,1)
-        zz.Set(2,2,1)
-        zz.Set(3,3,1)
-        fmt.Println(*zz)
-        foo, _ := zz.Slice(0,2,0,2)
-        fmt.Println(*foo)
 }

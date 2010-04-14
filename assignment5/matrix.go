@@ -63,10 +63,10 @@ func (this *DenseMatrix) String() string {
 	for i := 0; i < this.Rows(); i++ {
 		s += "	["
 		for j := 0; j < this.Cols(); j++ {
-			s += fmt.Sprintf(" %f", this.Get(i,j))
+			s += fmt.Sprintf(" %f", this.Get(i, j))
 		}
 		s += "]"
-		if i != this.Rows() - 1 {
+		if i != this.Rows()-1 {
 			s += " \n"
 		}
 	}
@@ -80,14 +80,14 @@ func (this *DenseMatrix) Rows() int { return this.rows }
 // Get the number of columns in the matrix
 func (this *DenseMatrix) Cols() int { return this.cols }
 
-// Add the argument matrix to the receiver. 
+// Add the argument matrix to the receiver.
 func (this *DenseMatrix) Add(m *Matrix) os.Error {
 	if this.Rows() != m.Rows() || this.Cols() != m.Cols() {
 		return os.NewError("Matrix dimensions do not match")
 	}
 	for i := 0; i < this.Rows(); i++ {
 		for j := 0; j < this.Cols(); j++ {
-			this.Set(i,j, this.Get(i,j) + m.Get(i,j))
+			this.Set(i, j, this.Get(i, j)+m.Get(i, j))
 		}
 	}
 	return nil
@@ -100,10 +100,10 @@ func (this *DenseMatrix) Plus(m *Matrix) (*Matrix, os.Error) {
 	}
 	//ret.data = make([]float, this.rows*this.cols)
 	var ret *Matrix
-	ret,_ = Zeros(this.Rows(), this.Cols())
+	ret, _ = Zeros(this.Rows(), this.Cols())
 	for i := 0; i < this.Rows(); i++ {
 		for j := 0; j < this.Cols(); j++ {
-			ret.Set(i,j, this.Get(i,j) + m.Get(i,j))
+			ret.Set(i, j, this.Get(i, j)+m.Get(i, j))
 		}
 	}
 	return ret, nil
@@ -128,7 +128,7 @@ func (this *DenseMatrix) Multiply(m *Matrix) (*Matrix, os.Error) {
 	if this.Cols() != m.Rows() {
 		return nil, os.NewError("Invalid matrix dimensions for Multiply")
 	}
-	ret,_ := Zeros(this.Rows(), this.Cols())
+	ret, _ := Zeros(this.Rows(), this.Cols())
 
 	for i := 0; i < this.Rows(); i++ {
 		for j := 0; j < m.Cols(); j++ {
