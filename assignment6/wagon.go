@@ -2,6 +2,8 @@ package main
 
 import "fmt"
 import "container/list"
+import "exec"
+import "os"
 
 type Wagon struct {
 	x, y    int
@@ -20,6 +22,19 @@ func drawAt(x, y int, s string) {
 }
 
 func main() { 
+	cmd, err := exec.Run("/bin/stty", []string{"stty", "cbreak"}, os.Environ(), "", exec.PassThrough, exec.PassThrough, exec.PassThrough)
+	if err != nil {
+		fmt.Print(err)
+		os.Exit(-1)
+	}
+	cmd.Close()
+
+	b := make([]byte, 1)
+	for {
+		os.Stdin.Read(b)
+		fmt.Printf("%s",b)
+	}
+
 	clearScreen()
 	drawAt(2,3,"A")
 
