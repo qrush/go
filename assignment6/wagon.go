@@ -1,9 +1,16 @@
 package main
 
-import "fmt"
-import "container/list"
-import "exec"
-import "os"
+import (
+	"fmt"
+	"container/list"
+	"exec"
+	"os"
+)
+
+var (
+	width, height int
+	train         *list.List
+)
 
 type Wagon struct {
 	x, y    int
@@ -11,17 +18,36 @@ type Wagon struct {
 }
 
 func redraw() {
+	clearScreen()
+	for w := range train.Iter() {
+		this := w.(*Wagon)
+		drawAt(this.x, this.y, this.display)
+	}
 }
 
-func clearScreen() {
-	fmt.Printf("\033[2J\n")
+func clearScreen() { fmt.Printf("\033[2J\n") }
+
+func drawAt(x, y int, s string) { fmt.Printf("\033[%d;%dH%s\n", x, y, s) }
+
+func process(input string) {}
+
+func NewWagon(x, y int, display string) *Wagon {
+	w := new(Wagon)
+	w.x = x
+	w.y = y
+	w.display = display
+	return w
 }
 
-func drawAt(x, y int, s string) {
-	fmt.Printf("\033[%d;%dH%s\n", x, y, s)
+func init() {
+	width = 30
+	height = 30
+	train = list.New()
+	train.PushFront(NewWagon(1, 1, "a"))
+	train.PushBack(NewWagon(width, height, "b"))
 }
 
-func main() { 
+func main() {
 	cmd, err := exec.Run("/bin/stty", []string{"stty", "cbreak"}, os.Environ(), "", exec.PassThrough, exec.PassThrough, exec.PassThrough)
 	if err != nil {
 		fmt.Print(err)
@@ -31,35 +57,9 @@ func main() {
 
 	b := make([]byte, 1)
 	for {
+		process(string(b))
+		redraw()
 		os.Stdin.Read(b)
-		fmt.Printf("%s",b)
-	}
-
-	clearScreen()
-	drawAt(2,3,"A")
-
-	fmt.Println("WAGON TRAIN")
-
-	l := list.New()
-	w1 := new(Wagon)
-	w2 := new(Wagon)
-	w3 := new(Wagon)
-
-	w1.x = 3
-	w1.y = 3
-	w1.display = "a"
-	w2.x = 4
-	w2.y = 4
-	w2.display = "b"
-	w3.x = 5
-	w3.y = 5
-	w3.display = "c"
-
-	l.PushBack(w1)
-	l.PushBack(w2)
-	l.PushBack(w3)
-
-	for w := range l.Iter() {
-		fmt.Println(w.(*Wagon).display)
+		fmt.Printf("%s", b)
 	}
 }
