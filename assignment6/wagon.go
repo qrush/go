@@ -10,6 +10,7 @@ import (
 var (
 	width, height int
 	train         *list.List
+	nextDisplay   byte
 )
 
 type Wagon struct {
@@ -21,6 +22,7 @@ func redraw() {
 	clearScreen()
 	for w := range train.Iter() {
 		this := w.(*Wagon)
+		//fmt.Printf("redrawing %v\n", this)
 		drawAt(this.x, this.y, this.display)
 	}
 }
@@ -29,39 +31,39 @@ func clearScreen() { fmt.Printf("\033[2J\n") }
 
 func drawAt(x, y int, s string) { fmt.Printf("\033[%d;%dH%s\n", y, x, s) }
 
-func moveFront(x, y int) {
-	var first, prev *Wagon
+func moveBack(x, y int) {
+	var prev *Wagon
+	prev = train.Front().Value.(*Wagon)
+
 	if x > 0 && y > 0 && x <= width && y <= height {
-		iter := train.Iter()
-		first = (<-iter).(*Wagon)
-		prev = first
-		for w := range iter {
-			this := w.(*Wagon)
-			this.x = prev.x
-			this.y = prev.y
-			prev = this
+		for e := train.Front(); e != nil; e = e.Next() {
+			if e.Value.(*Wagon) != prev {
+				prev.x = e.Value.(*Wagon).x
+				prev.y = e.Value.(*Wagon).y
+			}
+			prev = e.Value.(*Wagon)
 		}
-		first.x = x
-		first.y = y
+
+		prev.x = x
+		prev.y = y
 	}
 }
 
-func moveBack(x, y int) {
-	var last, next *Wagon
-	last = train.Back().Value.(*Wagon)
-	next = last
+func moveFront(x, y int) {
+	var next *Wagon
+	next = train.Back().Value.(*Wagon)
 
 	if x > 0 && y > 0 && x <= width && y <= height {
 		for e := train.Back(); e != nil; e = e.Prev() {
-			if e.Value.(*Wagon) != last {
-				e.Value.(*Wagon).x = next.x
-				e.Value.(*Wagon).y = next.y
+			if e.Value.(*Wagon) != next {
+				next.x = e.Value.(*Wagon).x
+				next.y = e.Value.(*Wagon).y
 			}
 			next = e.Value.(*Wagon)
 		}
 
-		last.x = x
-		last.y = y
+		next.x = x
+		next.y = y
 	}
 }
 
@@ -70,6 +72,8 @@ func process(input string) {
 	tail := (train.Back()).Value.(*Wagon)
 
 	switch input {
+	case "a":
+		train.PushFront(NewWagon(1, 1))
 	case "u":
 		moveFront(head.x, head.y-1)
 	case "d":
@@ -78,6 +82,8 @@ func process(input string) {
 		moveFront(head.x-1, head.y)
 	case "r":
 		moveFront(head.x+1, head.y)
+	case "A":
+		train.PushBack(NewWagon(width, height))
 	case "U":
 		moveBack(tail.x, tail.y-1)
 	case "D":
@@ -86,24 +92,37 @@ func process(input string) {
 		moveBack(tail.x-1, tail.y)
 	case "R":
 		moveBack(tail.x+1, tail.y)
+	case "q":
+		cleanup()
+		os.Exit(0)
 	}
-
 }
 
-func NewWagon(x, y int, display string) *Wagon {
+func cleanup() {
+	cmd, err := exec.Run("/bin/stty", []string{"stty", "sane"}, os.Environ(), "", exec.PassThrough, exec.PassThrough, exec.PassThrough)
+	if err != nil {
+		fmt.Print(err)
+		os.Exit(-1)
+	}
+	cmd.Close()
+}
+
+func NewWagon(x, y int) *Wagon {
 	w := new(Wagon)
 	w.x = x
 	w.y = y
-	w.display = display
+	w.display = string(nextDisplay)
+	nextDisplay++
 	return w
 }
 
 func init() {
 	width = 30
 	height = 30
+	nextDisplay = 'a'
 	train = list.New()
-	train.PushFront(NewWagon(1, 1, "a"))
-	train.PushBack(NewWagon(width, height, "b"))
+	train.PushFront(NewWagon(1, 1))
+	train.PushBack(NewWagon(width, height))
 }
 
 func main() {
