@@ -22,7 +22,6 @@ func redraw() {
 	clearScreen()
 	for w := range train.Iter() {
 		this := w.(*Wagon)
-		//fmt.Printf("redrawing %v\n", this)
 		drawAt(this.x, this.y, this.display)
 	}
 }
@@ -35,7 +34,7 @@ func moveBack(x, y int) {
 	var prev *Wagon
 	prev = train.Front().Value.(*Wagon)
 
-	if x > 0 && y > 0 && x <= width && y <= height {
+	move(x, y, func() {
 		for e := train.Front(); e != nil; e = e.Next() {
 			if e.Value.(*Wagon) != prev {
 				prev.x = e.Value.(*Wagon).x
@@ -46,14 +45,14 @@ func moveBack(x, y int) {
 
 		prev.x = x
 		prev.y = y
-	}
+	})
 }
 
 func moveFront(x, y int) {
 	var next *Wagon
 	next = train.Back().Value.(*Wagon)
 
-	if x > 0 && y > 0 && x <= width && y <= height {
+	move(x, y, func() {
 		for e := train.Back(); e != nil; e = e.Prev() {
 			if e.Value.(*Wagon) != next {
 				next.x = e.Value.(*Wagon).x
@@ -64,6 +63,12 @@ func moveFront(x, y int) {
 
 		next.x = x
 		next.y = y
+	})
+}
+
+func move(x, y int, fn func()) {
+	if x > 0 && y > 0 && x <= width && y <= height {
+		fn()
 	}
 }
 
@@ -73,7 +78,7 @@ func process(input string) {
 
 	switch input {
 	case "a":
-		train.PushFront(NewWagon(1, 1))
+		addToTrain(true)
 	case "u":
 		moveFront(head.x, head.y-1)
 	case "d":
@@ -83,7 +88,7 @@ func process(input string) {
 	case "r":
 		moveFront(head.x+1, head.y)
 	case "A":
-		train.PushBack(NewWagon(width, height))
+		addToTrain(false)
 	case "U":
 		moveBack(tail.x, tail.y-1)
 	case "D":
@@ -95,6 +100,16 @@ func process(input string) {
 	case "q":
 		cleanup()
 		os.Exit(0)
+	}
+}
+
+func addToTrain(front bool) {
+	if nextDisplay < '~' {
+		if front {
+			train.PushFront(NewWagon(1, 1))
+		} else {
+			train.PushBack(NewWagon(width, height))
+		}
 	}
 }
 
