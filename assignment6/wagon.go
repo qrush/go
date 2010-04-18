@@ -30,19 +30,15 @@ func clearScreen() { fmt.Printf("\033[2J\n") }
 func drawAt(x, y int, s string) { fmt.Printf("\033[%d;%dH%s\n", y, x, s) }
 
 func moveFront(x, y int) {
-	isfirst := true
-	var first *Wagon
-	var prev *Wagon
+	var first, prev *Wagon
 	if x > 0 && y > 0 && x <= width && y <= height {
-		for w := range train.Iter() {
+		iter := train.Iter()
+		first = (<-iter).(*Wagon)
+		prev = first
+		for w := range iter {
 			this := w.(*Wagon)
-			if isfirst == true {
-				isfirst = false
-				first = this
-			} else {
-				this.x = prev.x
-				this.y = prev.y
-			}
+			this.x = prev.x
+			this.y = prev.y
 			prev = this
 		}
 		first.x = x
@@ -50,14 +46,46 @@ func moveFront(x, y int) {
 	}
 }
 
+func moveBack(x, y int) {
+	var last, next *Wagon
+	last = train.Back().Value.(*Wagon)
+	next = last
+
+	if x > 0 && y > 0 && x <= width && y <= height {
+		for e := train.Back(); e != nil; e = e.Prev() {
+			if e.Value.(*Wagon) != last {
+				e.Value.(*Wagon).x = next.x
+				e.Value.(*Wagon).y = next.y
+			}
+			next = e.Value.(*Wagon)
+		}
+
+		last.x = x
+		last.y = y
+	}
+}
+
 func process(input string) {
+	head := (train.Front()).Value.(*Wagon)
+	tail := (train.Back()).Value.(*Wagon)
+
 	switch input {
 	case "u":
-		wagon := (train.Front()).Value.(*Wagon)
-		moveFront(wagon.x, wagon.y-1)
+		moveFront(head.x, head.y-1)
 	case "d":
-		wagon := (train.Front()).Value.(*Wagon)
-		moveFront(wagon.x, wagon.y+1)
+		moveFront(head.x, head.y+1)
+	case "l":
+		moveFront(head.x-1, head.y)
+	case "r":
+		moveFront(head.x+1, head.y)
+	case "U":
+		moveBack(tail.x, tail.y-1)
+	case "D":
+		moveBack(tail.x, tail.y+1)
+	case "L":
+		moveBack(tail.x-1, tail.y)
+	case "R":
+		moveBack(tail.x+1, tail.y)
 	}
 
 }
