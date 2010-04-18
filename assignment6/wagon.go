@@ -27,9 +27,40 @@ func redraw() {
 
 func clearScreen() { fmt.Printf("\033[2J\n") }
 
-func drawAt(x, y int, s string) { fmt.Printf("\033[%d;%dH%s\n", x, y, s) }
+func drawAt(x, y int, s string) { fmt.Printf("\033[%d;%dH%s\n", y, x, s) }
 
-func process(input string) {}
+func moveFront(x, y int) {
+	isfirst := true
+	var first *Wagon
+	var prev *Wagon
+	if x > 0 && y > 0 && x <= width && y <= height {
+		for w := range train.Iter() {
+			this := w.(*Wagon)
+			if isfirst == true {
+				isfirst = false
+				first = this
+			} else {
+				this.x = prev.x
+				this.y = prev.y
+			}
+			prev = this
+		}
+		first.x = x
+		first.y = y
+	}
+}
+
+func process(input string) {
+	switch input {
+	case "u":
+		wagon := (train.Front()).Value.(*Wagon)
+		moveFront(wagon.x, wagon.y-1)
+	case "d":
+		wagon := (train.Front()).Value.(*Wagon)
+		moveFront(wagon.x, wagon.y+1)
+	}
+
+}
 
 func NewWagon(x, y int, display string) *Wagon {
 	w := new(Wagon)
@@ -57,9 +88,9 @@ func main() {
 
 	b := make([]byte, 1)
 	for {
-		process(string(b))
 		redraw()
 		os.Stdin.Read(b)
 		fmt.Printf("%s", b)
+		process(string(b))
 	}
 }
