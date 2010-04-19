@@ -5,6 +5,7 @@ import (
 	"exec"
 	"fmt"
 	"os"
+	"os/signal"
 )
 
 var (
@@ -89,8 +90,7 @@ func process(input string) {
 	case "R":
 		moveBack(tail.x+1, tail.y)
 	case "q":
-		stty("sane")
-		os.Exit(0)
+		cleanup()
 	}
 }
 
@@ -122,6 +122,11 @@ func New(x, y int) *Wagon {
 	return w
 }
 
+func cleanup() {
+	stty("sane")
+	os.Exit(0)
+}
+
 func init() {
 	width = 30
 	height = 30
@@ -129,6 +134,14 @@ func init() {
 	train = list.New()
 	train.PushFront(New(1, 1))
 	train.PushBack(New(width, height))
+
+	go func() {
+		for {
+			if (<-signal.Incoming).(signal.UnixSignal) == 2 {
+				cleanup()
+			}
+		}
+	}()
 }
 
 func main() {
