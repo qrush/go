@@ -1,0 +1,31 @@
+<!--
+Copyright 2009 The Go Authors. All rights reserved.
+Use of this source code is governed by a BSD-style
+license that can be found in the LICENSE file.
+-->
+
+<!-- PackageName is printed as title by the top-level template -->
+<p><code>import "go-hw/assignment6"</code></p>
+<p>
+This program does operations on a list of unrealistic &#34;wagons&#34; on a prairie. It is initialized with two wagons, a head and a tail. The size of the prairie defaults to 30x30 and can be set via command line arguments as well.
+</p>
+<p>
+Once running, keystrokes from the user move and modify the wagon train. The keys u, d, l, and r move the head, while U, D, L, and R move the tail. When the head moves, the next wagon in the train takes the head&#39;s old position and all the other wagons move to the previous position of their leader. Moving the tail works similarly.
+</p>
+<p>
+Pressing the &#34;a&#34; key creates a new wagon in the upper left corner of the prairie, which becomes the new head. Pressing &#34;A&#34; makes a new wagon in the lower right corner to act as the new tail.
+</p>
+<p>
+The &#34;q&#34; key quits the program.
+</p>
+
+<p>
+<h4>Package files</h4>
+<span style="font-size:90%">
+<a href="/go-hw/assignment6/doc.go">doc.go</a>
+</span>
+</p>
+<h2>Other packages</h2>
+<p>
+<a href="?p=main">main</a><br />
+</p>

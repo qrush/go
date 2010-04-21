@@ -1,3 +1,6 @@
+/*
+ * Everything goes in main because this is a program, not a package.
+ */
 package main
 
 import (
@@ -6,47 +9,57 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strconv"
 )
 
 var (
-	width, height int
-	train         *list.List
-	nextDisplay   byte
+	width, height int // width and height of the "prairie"
+	train         *list.List // the wagon train
+	nextDisplay   byte // the display character for the next train to be added
 )
 
 type (
 	Wagon struct {
 		x, y    int
-		display string
+		display string // This is what gets printed when we display the train
 	}
 )
 
+/* Redraw all the wagons and an info message */
 func redraw() {
 	clearScreen()
 	for w := range train.Iter() {
 		this := w.(*Wagon)
 		drawAt(this.x, this.y, this.display)
 	}
+	drawAt(0, height + 1, "udlr to move head, UDLR to move tail, \na to add new head, A to add new tail, q to quit\n")
 }
 
 func clearScreen() { fmt.Printf("\033[2J\n") }
 
-func drawAt(x, y int, s string) { fmt.Printf("\033[%d;%dH%s\n", y, x, s) }
+/* Draw a string at a given x/y coordinate */
+func drawAt(x, y int, s string) { fmt.Printf("\033[%d;%dH%s", y, x, s) }
 
+/* Get the front of the train */
 func head() *list.Element { return train.Front() }
 
+/* Get the end of the train */
 func tail() *list.Element { return train.Back() }
 
+/* Return the Wagon info for a list element */
 func wagon(e *list.Element) *Wagon { return e.Value.(*Wagon) }
 
+/* Move the front wagon and have the rest follow */
 func moveFront(x, y int) {
 	move(x, y, tail, func(e *list.Element) *list.Element { return e.Prev() })
 }
 
+/* Move the tail and have the rest follow */
 func moveBack(x, y int) {
 	move(x, y, head, func(e *list.Element) *list.Element { return e.Next() })
 }
 
+/* Generic moving */
 func move(x, y int, start func() *list.Element, advance func(*list.Element) *list.Element) {
 	if x > 0 && y > 0 && x <= width && y <= height {
 		first := wagon(start())
@@ -64,6 +77,7 @@ func move(x, y int, start func() *list.Element, advance func(*list.Element) *lis
 	}
 }
 
+/* Process the keystroke from the user */
 func process(input string) {
 	head := wagon(head())
 	tail := wagon(tail())
@@ -94,6 +108,7 @@ func process(input string) {
 	}
 }
 
+/* Add a new wagon to either the front or the back based on the value of the argument */
 func addToTrain(front bool) {
 	if nextDisplay < '~' {
 		if front {
@@ -104,6 +119,7 @@ func addToTrain(front bool) {
 	}
 }
 
+/* Run stty with the given argument string */
 func stty(mode string) {
 	cmd, err := exec.Run("/bin/stty", []string{"stty", mode}, os.Environ(), "", exec.PassThrough, exec.PassThrough, exec.PassThrough)
 	if err != nil {
@@ -113,6 +129,7 @@ func stty(mode string) {
 	cmd.Close()
 }
 
+/* Make a new Wagon */
 func New(x, y int) *Wagon {
 	w := new(Wagon)
 	w.x = x
@@ -122,14 +139,23 @@ func New(x, y int) *Wagon {
 	return w
 }
 
+/* Fix tty and exit. */
 func cleanup() {
 	stty("sane")
 	os.Exit(0)
 }
 
+/* Set up some default values and add the initial wagons */
 func init() {
 	width = 30
 	height = 30
+	if len(os.Args) == 3 {
+		width,_ = strconv.Atoi(os.Args[1])
+		height,_ = strconv.Atoi(os.Args[2])
+	} else if len(os.Args) != 1 {
+		fmt.Printf("Usage: %s [width] [height]\n", os.Args[0]);
+		os.Exit(1)
+	}
 	nextDisplay = 'a'
 	train = list.New()
 	train.PushFront(New(1, 1))
@@ -144,6 +170,7 @@ func init() {
 	}()
 }
 
+/* Kick it all off */
 func main() {
 	stty("cbreak")
 	b := make([]byte, 1)
