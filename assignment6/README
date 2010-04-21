@@ -1,0 +1,9 @@
+wagon - John Floren and Nick Quaranto
+=====================================
+
+Please check doc.go for usage instructions, or run `make doc`.
+
+install
+-------
+
+Run `make` and then `./wagon`. Welcome to the prairie!

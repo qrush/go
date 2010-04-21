@@ -13,9 +13,9 @@ import (
 )
 
 var (
-	width, height int // width and height of the "prairie"
+	width, height int        // width and height of the "prairie"
 	train         *list.List // the wagon train
-	nextDisplay   byte // the display character for the next train to be added
+	nextDisplay   byte       // the display character for the next train to be added
 )
 
 type (
@@ -32,7 +32,7 @@ func redraw() {
 		this := w.(*Wagon)
 		drawAt(this.x, this.y, this.display)
 	}
-	drawAt(0, height + 1, "udlr to move head, UDLR to move tail, \na to add new head, A to add new tail, q to quit\n")
+	drawAt(0, height+1, "udlr to move head, UDLR to move tail, \na to add new head, A to add new tail, q to quit\n")
 }
 
 func clearScreen() { fmt.Printf("\033[2J\n") }
@@ -150,10 +150,10 @@ func init() {
 	width = 30
 	height = 30
 	if len(os.Args) == 3 {
-		width,_ = strconv.Atoi(os.Args[1])
-		height,_ = strconv.Atoi(os.Args[2])
+		width, _ = strconv.Atoi(os.Args[1])
+		height, _ = strconv.Atoi(os.Args[2])
 	} else if len(os.Args) != 1 {
-		fmt.Printf("Usage: %s [width] [height]\n", os.Args[0]);
+		fmt.Printf("Usage: %s [width] [height]\n", os.Args[0])
 		os.Exit(1)
 	}
 	nextDisplay = 'a'
