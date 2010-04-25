@@ -4,8 +4,11 @@ import "games"
 import "os"
 
 var (
-	player1 games.View
-	player2 games.View
+	player1         games.View
+	player2         games.View
+	rockOutcome     = map[string]games.Outcome{paper: games.Lose, scissors: games.Win}
+	scissorsOutcome = map[string]games.Outcome{rock: games.Lose, paper: games.Win}
+	paperOutcome    = map[string]games.Outcome{scissors: games.Lose, rock: games.Win}
 )
 
 const (
@@ -34,7 +37,7 @@ func Referee(path string) {
 		f1 := func(v *games.View, c chan string) {
 			var m string
 			isDone := false
-			for ; !isDone; {
+			for !isDone {
 				go v.Enable()
 				m = v.Get().(string)
 				isDone = isLegal(m)
@@ -44,7 +47,7 @@ func Referee(path string) {
 
 		go f1(&player1, p1d)
 		go f1(&player2, p2d)
-		
+
 		p1m := <-p1d
 		p2m := <-p2d
 		player2.Set(p1m)
@@ -53,39 +56,31 @@ func Referee(path string) {
 		player1.Display()
 		player2.Display()
 
-		findWinner(p1m, p2m)
+		Done(p1m, p2m)
 	}
 }
 
-func findWinner(p1m, p2m string) {
-	if p1m == p2m {
-		player1.Done(games.Draw)
-		player2.Done(games.Draw)
-	} else {
-		if p1m == rock {
-			if p2m == paper {
-				player1.Done(games.Lose)
-				player2.Done(games.Win)
-			} else {
-				player1.Done(games.Win)
-				player2.Done(games.Lose)
-			}
-		} else if p1m == paper {
-			if p2m == rock {
-				player1.Done(games.Win)
-				player2.Done(games.Lose)
-			} else {
-				player1.Done(games.Lose)
-				player2.Done(games.Win)
-			}
-		} else if p1m == scissors {
-			if p2m == rock {
-				player1.Done(games.Lose)
-				player2.Done(games.Win)
-			} else {
-				player1.Done(games.Win)
-				player2.Done(games.Lose)
-			}
+func Done(p1m, p2m string) {
+	p1out := games.Draw
+	p2out := games.Draw
+
+	if p1m != p2m {
+		switch p1m {
+		case rock:
+			p1out = rockOutcome[p2m]
+		case scissors:
+			p1out = scissorsOutcome[p2m]
+		case paper:
+			p1out = paperOutcome[p2m]
+		}
+
+		if p1out == games.Win {
+			p2out = games.Lose
+		} else {
+			p2out = games.Win
 		}
 	}
+
+	player1.Done(p1out)
+	player2.Done(p2out)
 }
