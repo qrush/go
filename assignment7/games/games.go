@@ -37,22 +37,22 @@ type View interface {
 }
 
 type LocalView struct {
-	gotMove chan bool
-	name string
+	gotMove           chan bool
+	name              string
 	myMove, otherMove string
-	in  *bufio.Reader
-	out *bufio.Writer
+	in                *bufio.Reader
+	out               *bufio.Writer
 }
 
 func NewLocalView(name string, reader io.Reader, writer io.Writer) View {
 	var view View
-	view      = new(LocalView)
+	view = new(LocalView)
 	view.(*LocalView).gotMove = make(chan bool)
 	view.(*LocalView).name = name
-	view.(*LocalView).in   = bufio.NewReader(reader)
-	view.(*LocalView).out  = bufio.NewWriter(writer)
+	view.(*LocalView).in = bufio.NewReader(reader)
+	view.(*LocalView).out = bufio.NewWriter(writer)
 	return view
-} 
+}
 
 func (this *LocalView) Enable() {
 	this.Loop()
@@ -65,9 +65,7 @@ func (this *LocalView) Get() interface{} {
 	return foo
 }
 
-func (this *LocalView) Set(move interface{}) {
-	this.otherMove = move.(string)
-}
+func (this *LocalView) Set(move interface{}) { this.otherMove = move.(string) }
 
 func (this *LocalView) Display() {
 	this.out.Write([]byte(fmt.Sprintf("%s's opponent's move: %s\n", this.name, this.otherMove)))

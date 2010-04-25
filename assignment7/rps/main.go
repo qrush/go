@@ -7,6 +7,4 @@ import (
 	"os"
 )
 
-func main() {
-	rps.Play(os.Args[1])
-}
+func main() { rps.Play(os.Args[1]) }

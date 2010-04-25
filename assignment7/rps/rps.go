@@ -9,8 +9,8 @@ var (
 )
 
 const (
-	rock = "rock"
-	paper = "paper"
+	rock     = "rock"
+	paper    = "paper"
 	scissors = "scissors"
 )
 
@@ -33,7 +33,7 @@ func Play(path string) {
 	player2.Display()
 
 	findWinner(p1m.(string), p2m.(string))
-} 
+}
 
 func findWinner(p1m, p2m string) {
 	if p1m == p2m {
