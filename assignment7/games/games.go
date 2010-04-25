@@ -73,14 +73,13 @@ func (this *LocalView) Display() {
 }
 
 func (this *LocalView) Done(youWin Outcome) {
-	this.out.Write([]byte("game ovar"))
 	switch youWin {
 	case Win:
 		this.out.Write([]byte(fmt.Sprintf("%s wins.\n", this.name)))
 	case Lose:
 		this.out.Write([]byte(fmt.Sprintf("%s loses.\n", this.name)))
 	case Draw:
-		this.out.Write([]byte("Draw game."))
+		this.out.Write([]byte("Draw game.\n"))
 	}
 	this.out.Flush()
 }
@@ -89,6 +88,7 @@ func (this *LocalView) Loop() os.Error {
 	this.out.Write([]byte(fmt.Sprintf("%s's move: ", this.name)))
 	this.out.Flush()
 	tmp, ok := this.in.ReadBytes('\n')
+	tmp = tmp[:len(tmp)-1]
 	this.myMove = string(tmp)
 	return ok
 }
