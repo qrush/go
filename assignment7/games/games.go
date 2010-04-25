@@ -47,6 +47,7 @@ type LocalView struct {
 func NewLocalView(name string, reader io.Reader, writer io.Writer) View {
 	var view View
 	view      = new(LocalView)
+	view.(*LocalView).gotMove = make(chan bool)
 	view.(*LocalView).name = name
 	view.(*LocalView).in   = bufio.NewReader(reader)
 	view.(*LocalView).out  = bufio.NewWriter(writer)
@@ -69,13 +70,26 @@ func (this *LocalView) Set(move interface{}) {
 }
 
 func (this *LocalView) Display() {
-	fmt.Printf("%s's opponent's move: %s\n", this.name, this.otherMove)	
+	this.out.Write([]byte(fmt.Sprintf("%s's opponent's move: %s\n", this.name, this.otherMove)))
+	this.out.Flush()
 }
 
 func (this *LocalView) Done(youWin Outcome) {
+	this.out.Write([]byte("game ovar"))
+	switch youWin {
+	case Win:
+		this.out.Write([]byte(fmt.Sprintf("%s wins.\n", this.name)))
+	case Lose:
+		this.out.Write([]byte(fmt.Sprintf("%s loses.\n", this.name)))
+	case Draw:
+		this.out.Write([]byte("Draw game."))
+	}
+	this.out.Flush()
 }
 
 func (this *LocalView) Loop() os.Error {
+	this.out.Write([]byte(fmt.Sprintf("%s's move: ", this.name)))
+	this.out.Flush()
 	tmp, ok := this.in.ReadBytes('\n')
 	this.myMove = string(tmp)
 	return ok

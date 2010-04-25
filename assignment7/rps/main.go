@@ -1,14 +1,12 @@
 package main
 
 import (
-	"fmt"
-	"games"
+	//"fmt"
+	//"games"
 	"rps"
+	"os"
 )
 
 func main() {
-	lol := games.Win
-	fmt.Println("HELLO WORLD")
-	fmt.Println(lol)
-	rps.Test()
+	rps.Play(os.Args[1])
 }
