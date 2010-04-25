@@ -88,7 +88,7 @@ func (this *LocalView) Loop() os.Error {
 	this.out.Write([]byte(fmt.Sprintf("%s's move: ", this.name)))
 	this.out.Flush()
 	tmp, ok := this.in.ReadBytes('\n')
-	tmp = tmp[:len(tmp)-1]
+	tmp = tmp[0:len(tmp)-1]
 	this.myMove = string(tmp)
 	return ok
 }
