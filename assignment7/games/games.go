@@ -7,6 +7,7 @@ import (
 	"os"
 )
 
+// Possible game outcomes
 const (
 	Win = Outcome(1 + iota)
 	Lose
@@ -39,6 +40,7 @@ type (
 		Loop() os.Error
 	}
 
+	// Implements the View interface, holds state of a player
 	LocalView struct {
 		gotMove           chan bool
 		name              string
@@ -47,13 +49,20 @@ type (
 		out               *bufio.Writer
 	}
 
+	// what the referee must doy
 	Referee interface {
+		// Given the state of two players, is the game over?
 		Done(View, View) bool
+
+		// Determines if the given move is acceptable input
 		IsLegal(interface{}) bool
+
+		// Represents one round of the game, game continues until this is false
 		Turn(View, View) bool
 	}
 )
 
+// Factory to make a view implementation
 func NewLocalView(name string, reader io.Reader, writer io.Writer) (view View) {
 	view = new(LocalView)
 	view.(*LocalView).gotMove = make(chan bool)
@@ -63,23 +72,28 @@ func NewLocalView(name string, reader io.Reader, writer io.Writer) (view View) {
 	return
 }
 
+// Get this view ready for input
 func (this *LocalView) Enable() {
 	this.Loop()
 	this.gotMove <- true
 }
 
+// Blocks until a move is made, then returns it
 func (this *LocalView) Get() interface{} {
 	<-this.gotMove
 	return this.myMove
 }
 
+// Accepts a move made from another player
 func (this *LocalView) Set(move interface{}) { this.otherMove = move.(string) }
 
+// Prints out the player's status
 func (this *LocalView) Display() {
 	this.out.Write([]byte(fmt.Sprintf("%s's opponent's move: %s\n", this.name, this.otherMove)))
 	this.out.Flush()
 }
 
+// Report the game outcome to this player
 func (this *LocalView) Done(youWin Outcome) {
 	switch youWin {
 	case Win:
@@ -92,6 +106,7 @@ func (this *LocalView) Done(youWin Outcome) {
 	this.out.Flush()
 }
 
+// Accepts input from the player
 func (this *LocalView) Loop() os.Error {
 	this.out.Write([]byte(fmt.Sprintf("%s's move: ", this.name)))
 	this.out.Flush()
@@ -100,6 +115,7 @@ func (this *LocalView) Loop() os.Error {
 	return ok
 }
 
+// Sets up a game with the given readers, writers, and referee
 func Play(p1r io.Reader, p1w io.Writer, p2r io.Reader, p2w io.Writer, ref Referee) {
 	player1 := NewLocalView("A", p1r, p1w)
 	player2 := NewLocalView("B", p2r, p2w)
@@ -108,6 +124,7 @@ func Play(p1r io.Reader, p1w io.Writer, p2r io.Reader, p2w io.Writer, ref Refere
 	}
 }
 
+// Repeatedly asks the given view for a legal move on the channel given
 func Listen(ref Referee, v View, c chan string) {
 	var m string
 	isDone := false
