@@ -1,12 +1,11 @@
 package games
 
-import "os"
-import "io"
-import "bufio"
-import "fmt"
-
-// outcome of a game; positive.
-type Outcome int
+import (
+	"bufio"
+	"fmt"
+	"io"
+	"os"
+)
 
 const (
 	Win = Outcome(1 + iota)
@@ -14,44 +13,54 @@ const (
 	Draw
 )
 
-// what the view must do.
-type View interface {
-	// enable user interface until view's human player selects a move.
-	Enable()
+type (
+	// outcome of a game; positive.
+	Outcome int
 
-	// return the view's human player's move.
-	// If the move is deemed illegal, Enable and Get will be called again.
-	Get() interface{}
+	// what the view must do.
+	View interface {
+		// enable user interface until view's human player selects a move.
+		Enable()
 
-	// provide other view's human player's move.
-	Set(move interface{})
+		// return the view's human player's move.
+		// If the move is deemed illegal, Enable and Get will be called again.
+		Get() interface{}
 
-	// reveal other view's human player's move in user interface.
-	Display()
+		// provide other view's human player's move.
+		Set(move interface{})
 
-	// report game's outcome.
-	Done(youWin Outcome)
+		// reveal other view's human player's move in user interface.
+		Display()
 
-	// view's event loop, could return a read error.
-	Loop() os.Error
-}
+		// report game's outcome.
+		Done(youWin Outcome)
 
-type LocalView struct {
-	gotMove           chan bool
-	name              string
-	myMove, otherMove string
-	in                *bufio.Reader
-	out               *bufio.Writer
-}
+		// view's event loop, could return a read error.
+		Loop() os.Error
+	}
 
-func NewLocalView(name string, reader io.Reader, writer io.Writer) View {
-	var view View
+	LocalView struct {
+		gotMove           chan bool
+		name              string
+		myMove, otherMove string
+		in                *bufio.Reader
+		out               *bufio.Writer
+	}
+
+	Referee interface {
+		Done(View, View) bool
+		IsLegal(interface{}) bool
+		Turn(View, View) bool
+	}
+)
+
+func NewLocalView(name string, reader io.Reader, writer io.Writer) (view View) {
 	view = new(LocalView)
 	view.(*LocalView).gotMove = make(chan bool)
 	view.(*LocalView).name = name
 	view.(*LocalView).in = bufio.NewReader(reader)
 	view.(*LocalView).out = bufio.NewWriter(writer)
-	return view
+	return
 }
 
 func (this *LocalView) Enable() {
@@ -61,8 +70,7 @@ func (this *LocalView) Enable() {
 
 func (this *LocalView) Get() interface{} {
 	<-this.gotMove
-	foo := this.myMove
-	return foo
+	return this.myMove
 }
 
 func (this *LocalView) Set(move interface{}) { this.otherMove = move.(string) }
@@ -88,7 +96,25 @@ func (this *LocalView) Loop() os.Error {
 	this.out.Write([]byte(fmt.Sprintf("%s's move: ", this.name)))
 	this.out.Flush()
 	tmp, ok := this.in.ReadBytes('\n')
-	tmp = tmp[0 : len(tmp)-1]
-	this.myMove = string(tmp)
+	this.myMove = string(tmp[0 : len(tmp)-1])
 	return ok
+}
+
+func Play(p1r io.Reader, p1w io.Writer, p2r io.Reader, p2w io.Writer, ref Referee) {
+	player1 := NewLocalView("A", p1r, p1w)
+	player2 := NewLocalView("B", p2r, p2w)
+
+	for !ref.Turn(player1, player2) {
+	}
+}
+
+func Listen(ref Referee, v View, c chan string) {
+	var m string
+	isDone := false
+	for !isDone {
+		go v.Enable()
+		m = v.Get().(string)
+		isDone = ref.IsLegal(m)
+	}
+	c <- m
 }

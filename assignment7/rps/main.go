@@ -1,10 +1,12 @@
 package main
 
 import (
-	//"fmt"
-	//"games"
+	"games"
 	"rps"
 	"os"
 )
 
-func main() { rps.Referee(os.Args[1]) }
+func main() {
+	file, _ := os.Open(os.Args[1], os.O_RDWR, 0)
+	games.Play(os.Stdin, os.Stdout, file, file, rps.NewReferee())
+}

@@ -1,11 +1,12 @@
 package rps
 
 import "games"
-import "os"
+
+type rpsRef struct {
+	p1move, p2move string
+}
 
 var (
-	player1         games.View
-	player2         games.View
 	rockOutcome     = map[string]games.Outcome{paper: games.Lose, scissors: games.Win}
 	scissorsOutcome = map[string]games.Outcome{rock: games.Lose, paper: games.Win}
 	paperOutcome    = map[string]games.Outcome{scissors: games.Lose, rock: games.Win}
@@ -17,61 +18,44 @@ const (
 	scissors = "scissors"
 )
 
-func isLegal(m interface{}) bool {
-	foo := m.(string)
-	if foo == rock || foo == paper || foo == scissors {
-		return true
-	}
-	return false
+func NewReferee() games.Referee { return &rpsRef{} }
+
+func (this *rpsRef) IsLegal(m interface{}) bool {
+	move := m.(string)
+	return move == rock || move == paper || move == scissors
 }
 
-func Referee(path string) {
-	player1 = games.NewLocalView("A", os.Stdin, os.Stdout)
+func (this *rpsRef) Turn(player1, player2 games.View) bool {
+	p1d := make(chan string)
+	p2d := make(chan string)
 
-	file, _ := os.Open(path, os.O_RDWR, 0)
-	player2 = games.NewLocalView("B", file, file)
+	go games.Listen(this, player1, p1d)
+	go games.Listen(this, player2, p2d)
 
-	for {
-		p1d := make(chan string)
-		p2d := make(chan string)
-		f1 := func(v *games.View, c chan string) {
-			var m string
-			isDone := false
-			for !isDone {
-				go v.Enable()
-				m = v.Get().(string)
-				isDone = isLegal(m)
-			}
-			c <- m
-		}
+	this.p1move = <-p1d
+	this.p2move = <-p2d
 
-		go f1(&player1, p1d)
-		go f1(&player2, p2d)
+	player1.Set(this.p2move)
+	player2.Set(this.p1move)
 
-		p1m := <-p1d
-		p2m := <-p2d
-		player2.Set(p1m)
-		player1.Set(p2m)
+	player1.Display()
+	player2.Display()
 
-		player1.Display()
-		player2.Display()
-
-		Done(p1m, p2m)
-	}
+	return this.Done(player1, player2)
 }
 
-func Done(p1m, p2m string) {
+func (this *rpsRef) Done(player1, player2 games.View) bool {
 	p1out := games.Draw
 	p2out := games.Draw
 
-	if p1m != p2m {
-		switch p1m {
+	if this.p1move != this.p2move {
+		switch this.p1move {
 		case rock:
-			p1out = rockOutcome[p2m]
+			p1out = rockOutcome[this.p2move]
 		case scissors:
-			p1out = scissorsOutcome[p2m]
+			p1out = scissorsOutcome[this.p2move]
 		case paper:
-			p1out = paperOutcome[p2m]
+			p1out = paperOutcome[this.p2move]
 		}
 
 		if p1out == games.Win {
@@ -83,4 +67,5 @@ func Done(p1m, p2m string) {
 
 	player1.Done(p1out)
 	player2.Done(p2out)
+	return false
 }

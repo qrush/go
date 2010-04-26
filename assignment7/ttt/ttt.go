@@ -1,23 +1,15 @@
 package ttt
 
-import "games"
-import "os"
-import "math"
+import (
+	"games"
+	"math"
+)
+
+type tttRef struct {
+	board map[string]int
+}
 
 var (
-	player1 games.View
-	player2 games.View
-	board   = map[string]int{
-		"nw": 0,
-		"n":  0,
-		"ne": 0,
-		"w":  0,
-		"c":  0,
-		"e":  0,
-		"sw": 0,
-		"s":  0,
-		"se": 0,
-	}
 	outcomes = [][]string{
 		[]string{"nw", "n", "ne"},
 		[]string{"w", "c", "e"},
@@ -32,59 +24,56 @@ var (
 
 const (
 	p1mark = 1
-	p2mark = -1
+	p2mark = -p1mark
 )
 
-func isLegal(m interface{}) bool {
-	val, ok := board[m.(string)]
+func NewReferee() games.Referee {
+	return &tttRef{map[string]int{
+		"nw": 0,
+		"n":  0,
+		"ne": 0,
+		"w":  0,
+		"c":  0,
+		"e":  0,
+		"sw": 0,
+		"s":  0,
+		"se": 0,
+	}}
+}
+
+func (this *tttRef) IsLegal(m interface{}) bool {
+	val, ok := this.board[m.(string)]
 	return ok && val == 0
 }
 
-func Referee() {
-	player1 = games.NewLocalView("A", os.Stdin, os.Stdout)
-	player2 = games.NewLocalView("B", os.Stdin, os.Stdout)
+func (this *tttRef) Turn(player1, player2 games.View) (done bool) {
+	p1d := make(chan string)
+	p2d := make(chan string)
 
-	for {
-		p1d := make(chan string)
-		p2d := make(chan string)
-		f1 := func(v *games.View, c chan string) {
-			var m string
-			isDone := false
-			for !isDone {
-				go v.Enable()
-				m = v.Get().(string)
-				isDone = isLegal(m)
-			}
-			c <- m
-		}
+	go games.Listen(this, player1, p1d)
+	p1m := <-p1d
+	this.board[p1m] = p1mark
+	player2.Set(p1m)
+	player2.Display()
 
-		go f1(&player1, p1d)
-		p1m := <-p1d
-		Move(p1m, p1mark)
-		player2.Set(p1m)
-		player2.Display()
-		if Done() {
-			break
-		}
+	if done = this.Done(player1, player2); !done {
 
-		go f1(&player2, p2d)
+		go games.Listen(this, player2, p2d)
 		p2m := <-p2d
-		Move(p2m, p2mark)
+		this.board[p2m] = p2mark
 		player1.Set(p2m)
 		player1.Display()
-		if Done() {
-			break
-		}
+		done = this.Done(player1, player2)
+
 	}
+
+	return
 }
 
-func Move(move string, mark int) { board[move] = mark }
-
-func Done() bool {
-	done := false
+func (this *tttRef) Done(player1, player2 games.View) (done bool) {
 	draw := true
 
-	for _, value := range board {
+	for _, value := range this.board {
 		if value == 0 {
 			draw = false
 			break
@@ -98,8 +87,8 @@ func Done() bool {
 	}
 
 	for _, outcome := range outcomes {
-		first := board[outcome[0]]
-		if math.Fabs(float64(first+board[outcome[1]]+board[outcome[2]])) == 3 {
+		first := this.board[outcome[0]]
+		if math.Fabs(float64(first+this.board[outcome[1]]+this.board[outcome[2]])) == 3 {
 			if first == p1mark {
 				player1.Done(games.Win)
 				player2.Done(games.Lose)
