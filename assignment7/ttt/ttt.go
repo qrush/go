@@ -5,28 +5,30 @@ import (
 	"math"
 )
 
+// The current game state, a map of positions => player marks
 type tttRef struct {
 	board map[string]int
 }
 
-var (
-	outcomes = [][]string{
-		[]string{"nw", "n", "ne"},
-		[]string{"w", "c", "e"},
-		[]string{"sw", "s", "se"},
-		[]string{"nw", "w", "sw"},
-		[]string{"n", "c", "s"},
-		[]string{"ne", "e", "se"},
-		[]string{"nw", "c", "se"},
-		[]string{"ne", "c", "sw"},
-	}
-)
+// possible winning outcomes for a game
+var outcomes = [][]string{
+	[]string{"nw", "n", "ne"},
+	[]string{"w", "c", "e"},
+	[]string{"sw", "s", "se"},
+	[]string{"nw", "w", "sw"},
+	[]string{"n", "c", "s"},
+	[]string{"ne", "e", "se"},
+	[]string{"nw", "c", "se"},
+	[]string{"ne", "c", "sw"},
+}
 
+// A player's mark on the tic tac toe board
 const (
 	p1mark = 1
 	p2mark = -p1mark
 )
 
+// Create a new ref for a game with a blank board
 func NewReferee() games.Referee {
 	return &tttRef{map[string]int{
 		"nw": 0,
@@ -41,11 +43,21 @@ func NewReferee() games.Referee {
 	}}
 }
 
+// Check if a move is in the board and if it hasn't been made
 func (this *tttRef) IsLegal(m interface{}) bool {
 	val, ok := this.board[m.(string)]
 	return ok && val == 0
 }
 
+// Runs a round of the tic tac toe game.
+// * Get move from player 1
+// * Update game board
+// * Notify player 2
+// * Check if the game is done
+// * If not, get move from player 2
+// * Update game board
+// * Notify player 1
+// * Check if the game is done
 func (this *tttRef) Turn(player1, player2 games.View) (done bool) {
 	p1d := make(chan string)
 	p2d := make(chan string)
@@ -70,6 +82,9 @@ func (this *tttRef) Turn(player1, player2 games.View) (done bool) {
 	return
 }
 
+// Determines if the game is over. Game is over if:
+// * All board elements are marked (draw)
+// * A winning outcome is on the board and is owned by one player
 func (this *tttRef) Done(player1, player2 games.View) (done bool) {
 	draw := true
 
