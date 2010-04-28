@@ -3,6 +3,7 @@ package ttt
 import (
 	"games"
 	"math"
+	"os"
 )
 
 // The current game state, a map of positions => player marks
@@ -46,6 +47,9 @@ func NewReferee() games.Referee {
 // Check if a move is in the board and if it hasn't been made
 func (this *tttRef) IsLegal(m interface{}) bool {
 	val, ok := this.board[m.(string)]
+	if m.(string) == "q" {
+		os.Exit(0)
+	}
 	return ok && val == 0
 }
 

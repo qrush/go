@@ -1,6 +1,7 @@
 package rps
 
 import "games"
+import "os"
 
 // Game state for RPS, holds both players' current moves.
 type rpsRef struct {
@@ -26,6 +27,9 @@ func NewReferee() games.Referee { return &rpsRef{} }
 // Determines if this move is legal (is it rock, paper or scissors?)
 func (this *rpsRef) IsLegal(m interface{}) bool {
 	move := m.(string)
+	if move == "q" {
+		os.Exit(0)
+	}
 	return move == rock || move == paper || move == scissors
 }
 
