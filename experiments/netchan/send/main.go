@@ -9,8 +9,9 @@ type Octocat struct {
 
 func main() {
 	fmt.Println("LOL")
-	exp, _ := netchan.NewExporter("tcp", ":8383")
+	exp, _ := netchan.NewExporter("tcp", ":9292")
 	c := make(chan Octocat)
-	exp.Export("name", c, netchan.Send, new(Octocat))
+	err := exp.Export("octocator", c, netchan.Send, new(Octocat))
+	fmt.Println(err)
 	c <- Octocat{0}
 }
