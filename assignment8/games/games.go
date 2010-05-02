@@ -7,6 +7,7 @@ import (
 	"os"
 	"netchan"
 	"time"
+	"strings"
 )
 
 // Possible game outcomes
@@ -15,8 +16,6 @@ const (
 	Lose
 	Draw
 )
-
-const chanName = "foo"
 
 type (
 	// outcome of a game; positive.
@@ -157,6 +156,8 @@ func Listen(ref Referee, v View, c chan string) {
 
 // Factory to make a view implementation
 func NewProxyView(name, local, remote string) (view View) {
+	ls := strings.Split(local, ":", 0)
+	rs := strings.Split(remote, ":", 0)
 	view = new(ProxyView)
 	view.(*ProxyView).gotMove = make(chan bool)
 	view.(*ProxyView).name = name
@@ -164,7 +165,10 @@ func NewProxyView(name, local, remote string) (view View) {
 	//view.(*ProxyView).out = bufio.NewWriter(writer)
 	var err os.Error
 	view.(*ProxyView).exp, err = netchan.NewExporter("tcp", local)
+	view.(*ProxyView).out = make(chan Move)
+	err = view.(*ProxyView).exp.Export(ls[1], view.(*ProxyView).out, netchan.Send, new(Move))
 	for {
+		fmt.Println("looping to open " + remote)
 		if view.(*ProxyView).imp, err = netchan.NewImporter("tcp", remote); err != nil {
 			time.Sleep(1000000000)
 		} else {
@@ -172,9 +176,7 @@ func NewProxyView(name, local, remote string) (view View) {
 		}
 	}
 	view.(*ProxyView).in = make(chan Move)
-	view.(*ProxyView).out = make(chan Move)
-	err = view.(*ProxyView).exp.Export(chanName, view.(*ProxyView).out, netchan.Send, new(Move))
-	err = view.(*ProxyView).imp.Import(chanName, view.(*ProxyView).in, netchan.Recv, new(Move))
+	err = view.(*ProxyView).imp.Import(rs[1], view.(*ProxyView).in, netchan.Recv, new(Move))
 	return
 }
 
