@@ -2,16 +2,14 @@ package main
 
 import "fmt"
 import "netchan"
-
-type Octocat struct {
-	parents int
-}
+import "os"
 
 func main() {
 	fmt.Println("LOL")
-	exp, _ := netchan.NewExporter("tcp", ":9292")
-	c := make(chan Octocat)
-	err := exp.Export("octocator", c, netchan.Send, new(Octocat))
+	exp, eerr := netchan.NewExporter("tcp", ":9292")
+	fmt.Println(eerr)
+	c := make(chan os.SyscallError)
+	err := exp.Export("octocator", c, netchan.Send, new(os.SyscallError))
 	fmt.Println(err)
-	c <- Octocat{0}
+	c <- os.NewSyscallError("foo", 1)
 }

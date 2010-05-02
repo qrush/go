@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"netchan"
+	"time"
 )
 
 // Possible game outcomes
@@ -13,6 +15,8 @@ const (
 	Lose
 	Draw
 )
+
+const chanName = "foo"
 
 type (
 	// outcome of a game; positive.
@@ -47,6 +51,20 @@ type (
 		myMove, otherMove string
 		in                *bufio.Reader
 		out               *bufio.Writer
+	}
+
+	ProxyView struct {
+		gotMove		chan bool
+		name		string
+		myMove, otherMove	string
+		imp		*netchan.Importer
+		exp		*netchan.Exporter
+		in		chan Move
+		out		chan Move
+	}
+
+	Move struct {
+		m	string
 	}
 
 	// what the referee must doy
@@ -135,3 +153,73 @@ func Listen(ref Referee, v View, c chan string) {
 	}
 	c <- m
 }
+
+
+// Factory to make a view implementation
+func NewProxyView(name, local, remote string) (view View) {
+	view = new(ProxyView)
+	view.(*ProxyView).gotMove = make(chan bool)
+	view.(*ProxyView).name = name
+	//view.(*ProxyView).in = bufio.NewReader(reader)
+	//view.(*ProxyView).out = bufio.NewWriter(writer)
+	var err os.Error
+	view.(*ProxyView).exp, err = netchan.NewExporter("tcp", local)
+	for {
+		if view.(*ProxyView).imp, err = netchan.NewImporter("tcp", remote); err != nil {
+			time.Sleep(1000000000)
+		} else {
+			break
+		}
+	}
+	view.(*ProxyView).in = make(chan Move)
+	view.(*ProxyView).out = make(chan Move)
+	err = view.(*ProxyView).exp.Export(chanName, view.(*ProxyView).out, netchan.Send, new(Move))
+	err = view.(*ProxyView).imp.Import(chanName, view.(*ProxyView).in, netchan.Recv, new(Move))
+	return
+}
+
+// Get this view ready for input
+func (this *ProxyView) Enable() {
+	this.Loop()
+	this.gotMove <- true
+}
+
+// Blocks until a move is made, then returns it
+func (this *ProxyView) Get() interface{} {
+	<-this.gotMove
+	return this.myMove
+}
+
+// Accepts a move made from another player
+func (this *ProxyView) Set(move interface{}) { 
+	this.otherMove = move.(string) 
+	this.out <- Move{move.(string)}
+}
+
+// Prints out the player's status
+func (this *ProxyView) Display() {
+}
+
+// Report the game outcome to this player
+func (this *ProxyView) Done(youWin Outcome) {
+/*
+	switch youWin {
+	case Win:
+		this.out.Write([]byte(fmt.Sprintf("%s wins.\n", this.name)))
+	case Lose:
+		this.out.Write([]byte(fmt.Sprintf("%s loses.\n", this.name)))
+	case Draw:
+		this.out.Write([]byte("Draw game.\n"))
+	}
+	this.out.Flush()
+*/
+}
+
+// Accepts input from the player
+func (this *ProxyView) Loop() os.Error {
+	var tmp Move
+	tmp = <-this.in
+	this.myMove = tmp.m
+	return nil	
+}
+
