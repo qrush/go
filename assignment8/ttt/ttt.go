@@ -4,6 +4,7 @@ import (
 	"games"
 	"math"
 	"os"
+	//"fmt"
 )
 
 // The current game state, a map of positions => player marks
@@ -68,17 +69,21 @@ func (this *tttRef) Turn(player1, player2 games.View) (done bool) {
 
 	go games.Listen(this, player1, p1d)
 	p1m := <-p1d
+	//fmt.Println("derp got p1move")
 	this.board[p1m] = p1mark
 	player2.Set(p1m)
 	player2.Display()
+	//fmt.Println("did display on p2")
 
 	if done = this.Done(player1, player2); !done {
 
 		go games.Listen(this, player2, p2d)
 		p2m := <-p2d
+		//fmt.Println("derp got p2move")
 		this.board[p2m] = p2mark
 		player1.Set(p2m)
 		player1.Display()
+		//fmt.Println("did display on p1")
 		done = this.Done(player1, player2)
 
 	}
