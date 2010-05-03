@@ -8,13 +8,9 @@ import (
 	"time"
 )
 
-var playerA *bool = flag.Bool("a", false, "set if this process should be player A")
-
-func main() { 
-	//games.Play(os.Stdin, os.Stdout, os.Stdin, os.Stdout, ttt.NewReferee()) 
-	flag.Parse()	
+func main() {
 	var player1, player2 games.View
-	if *playerA {
+	if *games.PlayerA {
 		player1 = games.NewLocalView("A", os.Stdin, os.Stdout)
 		player2 = games.NewProxyView("B", flag.Arg(0), flag.Arg(1))
 	} else {
@@ -24,5 +20,5 @@ func main() {
 	ref := ttt.NewReferee()
 	for !ref.Turn(player1, player2) {
 	}
-	time.Sleep(.5*1e9)
+	time.Sleep(.5 * 1e9)
 }

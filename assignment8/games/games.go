@@ -2,12 +2,13 @@ package games
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"io"
-	"os"
 	"netchan"
-	"time"
+	"os"
 	"strings"
+	"time"
 )
 
 // Possible game outcomes
@@ -78,6 +79,12 @@ type (
 		Turn(View, View) bool
 	}
 )
+
+var PlayerA *bool = flag.Bool("a", false, "set if this process should be player A")
+
+func init() {
+	flag.Parse()
+}
 
 // Factory to make a view implementation
 func NewLocalView(name string, reader io.Reader, writer io.Writer) (view View) {
@@ -161,16 +168,13 @@ func NewProxyView(name, local, remote string) (view View) {
 	view = new(ProxyView)
 	view.(*ProxyView).gotMove = make(chan bool)
 	view.(*ProxyView).name = name
-	//view.(*ProxyView).in = bufio.NewReader(reader)
-	//view.(*ProxyView).out = bufio.NewWriter(writer)
 	var err os.Error
 	view.(*ProxyView).exp, err = netchan.NewExporter("tcp", local)
 	view.(*ProxyView).out = make(chan Move)
 	err = view.(*ProxyView).exp.Export(ls[1], view.(*ProxyView).out, netchan.Send, new(Move))
 	for {
-		fmt.Println("looping to open " + remote)
 		if view.(*ProxyView).imp, err = netchan.NewImporter("tcp", remote); err != nil {
-			time.Sleep(1000000000)
+			time.Sleep(1*1e9)
 		} else {
 			break
 		}
