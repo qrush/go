@@ -1,6 +1,7 @@
 package rps
 
 import "games"
+import "fmt"
 import "os"
 
 // Game state for RPS, holds both players' current moves.
@@ -43,8 +44,25 @@ func (this *rpsRef) Turn(player1, player2 games.View) bool {
 	go games.Listen(this, player1, p1d)
 	go games.Listen(this, player2, p2d)
 
-	this.p1move = <-p1d
-	this.p2move = <-p2d
+	if *games.PlayerA {
+		fmt.Println("YOU ARE PLAYER A")
+		fmt.Println(player1)
+		fmt.Println("BLOCKING ON p1")
+		this.p1move = <-p1d
+		fmt.Println(player2)
+		fmt.Println("BLOCKING ON p2")
+		this.p2move = <-p2d
+		fmt.Println("DONE WITH MOVES")
+	} else {
+		fmt.Println("YOU ARE PLAYER B")
+		fmt.Println(player2)
+		fmt.Println("BLOCKING ON p2")
+		this.p2move = <-p2d
+		fmt.Println(player1)
+		fmt.Println("BLOCKING ON p1")
+		this.p1move = <-p1d
+		fmt.Println("DONE WITH MOVES")
+	}
 
 	player1.Set(this.p2move)
 	player2.Set(this.p1move)
