@@ -151,27 +151,28 @@ func Listen(ref Referee, v View, c chan string) {
 	c <- m
 }
 
-
-// Factory to make a view implementation
+// Factory to make a proxy view implementation
 func NewProxyView(name, local, remote string) (view View) {
 	ls := strings.Split(local, ":", 0)
 	rs := strings.Split(remote, ":", 0)
+
 	view = new(ProxyView)
+	view.(*ProxyView).name    = name
+	view.(*ProxyView).exp, _  = netchan.NewExporter("tcp", local)
 	view.(*ProxyView).gotMove = make(chan bool)
-	view.(*ProxyView).name = name
-	var err os.Error
-	view.(*ProxyView).exp, err = netchan.NewExporter("tcp", local)
-	view.(*ProxyView).out = make(chan Move)
-	err = view.(*ProxyView).exp.Export(ls[1], view.(*ProxyView).out, netchan.Send, new(Move))
+	view.(*ProxyView).in      = make(chan Move)
+	view.(*ProxyView).out     = make(chan Move)
+
+	view.(*ProxyView).exp.Export(ls[1], view.(*ProxyView).out, netchan.Send, new(Move))
 	for {
+		var err os.Error
 		if view.(*ProxyView).imp, err = netchan.NewImporter("tcp", remote); err != nil {
 			time.Sleep(1*1e9)
 		} else {
 			break
 		}
 	}
-	view.(*ProxyView).in = make(chan Move)
-	err = view.(*ProxyView).imp.Import(rs[1], view.(*ProxyView).in, netchan.Recv, new(Move))
+	view.(*ProxyView).imp.Import(rs[1], view.(*ProxyView).in, netchan.Recv, new(Move))
 	return
 }
 
