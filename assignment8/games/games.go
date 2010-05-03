@@ -207,9 +207,9 @@ func (this *ProxyView) Done(youWin Outcome) {
 // Accepts input from the player
 func (this *ProxyView) Loop() os.Error {
 	var tmp Move
-	fmt.Println("LOOP: WAITING FOR MOVE")
+//	fmt.Println("LOOP: WAITING FOR MOVE")
 	tmp = <-this.in
-	fmt.Println("LOOP: GOT FOR MOVE")
+//	fmt.Println("LOOP: GOT FOR MOVE")
 	this.myMove = tmp.m
 	return nil
 }
