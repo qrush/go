@@ -40,7 +40,6 @@ func (this *rpsRef) Turn(player1, player2 games.View) bool {
 	p1d := make(chan string)
 	p2d := make(chan string)
 
-
 	go games.Listen(this, player1, p1d)
 	go games.Listen(this, player2, p2d)
 

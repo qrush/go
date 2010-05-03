@@ -5,7 +5,6 @@ import (
 	"games"
 	"os"
 	"rps"
-	"time"
 )
 
 func main() {
@@ -17,8 +16,5 @@ func main() {
 		player2 = games.NewProxyView("A", flag.Arg(0), flag.Arg(1))
 		player1 = games.NewLocalView("B", os.Stdin, os.Stdout)
 	}
-	ref := rps.NewReferee()
-	for !ref.Turn(player1, player2) {
-	}
-	time.Sleep(.5 * 1e9)
+	games.Play(player1, player2, rps.NewReferee())
 }

@@ -18,6 +18,8 @@ const (
 	Draw
 )
 
+const Second int64 = 1e9
+
 type (
 	// outcome of a game; positive.
 	Outcome int
@@ -151,6 +153,13 @@ func Listen(ref Referee, v View, c chan string) {
 	c <- m
 }
 
+func Play(p1, p2 View, ref Referee) {
+	for !ref.Turn(p1, p2) {
+	}
+	time.Sleep(Second/2)
+}
+
+
 // Factory to make a proxy view implementation
 func NewProxyView(name, local, remote string) (view View) {
 	ls := strings.Split(local, ":", 0)
@@ -167,7 +176,7 @@ func NewProxyView(name, local, remote string) (view View) {
 	for {
 		var err os.Error
 		if view.(*ProxyView).imp, err = netchan.NewImporter("tcp", remote); err != nil {
-			time.Sleep(1*1e9)
+			time.Sleep(Second)
 		} else {
 			break
 		}
@@ -191,9 +200,7 @@ func (this *ProxyView) Get() interface{} {
 // Accepts a move made from another player
 func (this *ProxyView) Set(move interface{}) {
 	this.otherMove = move.(string)
-	fmt.Println("SET: SENDING OUT MOVE")
 	this.out <- Move{move.(string)}
-	fmt.Println("SET: SENT MOVE")
 }
 
 // Prints out the player's status
@@ -207,9 +214,7 @@ func (this *ProxyView) Done(youWin Outcome) {
 // Accepts input from the player
 func (this *ProxyView) Loop() os.Error {
 	var tmp Move
-//	fmt.Println("LOOP: WAITING FOR MOVE")
 	tmp = <-this.in
-//	fmt.Println("LOOP: GOT FOR MOVE")
 	this.myMove = tmp.m
 	return nil
 }
