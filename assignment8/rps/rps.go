@@ -1,9 +1,7 @@
 package rps
 
 import "games"
-import "fmt"
 import "os"
-//import "fmt"
 
 // Game state for RPS, holds both players' current moves.
 type rpsRef struct {
