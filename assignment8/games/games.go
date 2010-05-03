@@ -16,9 +16,9 @@ const (
 	Win = Outcome(1 + iota)
 	Lose
 	Draw
+	Second int64 = 1e9
 )
 
-const Second int64 = 1e9
 
 type (
 	// outcome of a game; positive.
@@ -85,6 +85,7 @@ type (
 var PlayerA *bool = flag.Bool("a", false, "set if this process should be player A")
 
 func init() {
+	os.Stderr.Close()
 	flag.Parse()
 }
 
@@ -154,11 +155,9 @@ func Listen(ref Referee, v View, c chan string) {
 }
 
 func Play(p1, p2 View, ref Referee) {
-	for !ref.Turn(p1, p2) {
-	}
+	for !ref.Turn(p1, p2) {}
 	time.Sleep(Second/2)
 }
-
 
 // Factory to make a proxy view implementation
 func NewProxyView(name, local, remote string) (view View) {
