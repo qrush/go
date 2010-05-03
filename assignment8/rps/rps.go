@@ -1,6 +1,7 @@
 package rps
 
 import "games"
+import "fmt"
 import "os"
 //import "fmt"
 
@@ -41,22 +42,6 @@ func (this *rpsRef) Turn(player1, player2 games.View) bool {
 	p1d := make(chan string)
 	p2d := make(chan string)
 
-/*
-	go func() { go games.Listen(this, player1, p1d)
-		this.p1move = <-p1d
-		fmt.Println("p1 calling Set")
-		player2.Set(this.p1move)
-		fmt.Println("p1 returned from Set")
-		p1d<- this.p1move
-	}()
-	go func() { go games.Listen(this, player2, p2d)
-		this.p2move = <-p2d
-		fmt.Println("p2 calling Set")
-		player1.Set(this.p2move)
-		fmt.Println("p2 returned from Set")
-		p2d<- this.p2move
-	}()
-*/
 
 	go games.Listen(this, player1, p1d)
 	go games.Listen(this, player2, p2d)
