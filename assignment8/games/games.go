@@ -139,15 +139,6 @@ func (this *LocalView) Loop() os.Error {
 	return ok
 }
 
-// Sets up a game with the given readers, writers, and referee
-func Play(p1r io.Reader, p1w io.Writer, p2r io.Reader, p2w io.Writer, ref Referee) {
-	player1 := NewLocalView("A", p1r, p1w)
-	player2 := NewLocalView("B", p2r, p2w)
-
-	for !ref.Turn(player1, player2) {
-	}
-}
-
 // Repeatedly asks the given view for a legal move on the channel given
 func Listen(ref Referee, v View, c chan string) {
 	var m string
@@ -197,9 +188,11 @@ func (this *ProxyView) Get() interface{} {
 }
 
 // Accepts a move made from another player
-func (this *ProxyView) Set(move interface{}) { 
-	this.otherMove = move.(string) 
+func (this *ProxyView) Set(move interface{}) {
+	this.otherMove = move.(string)
+	fmt.Println("SET: SENDING OUT MOVE")
 	this.out <- Move{move.(string)}
+	fmt.Println("SET: SENT MOVE")
 }
 
 // Prints out the player's status
@@ -208,24 +201,15 @@ func (this *ProxyView) Display() {
 
 // Report the game outcome to this player
 func (this *ProxyView) Done(youWin Outcome) {
-/*
-	switch youWin {
-	case Win:
-		this.out.Write([]byte(fmt.Sprintf("%s wins.\n", this.name)))
-	case Lose:
-		this.out.Write([]byte(fmt.Sprintf("%s loses.\n", this.name)))
-	case Draw:
-		this.out.Write([]byte("Draw game.\n"))
-	}
-	this.out.Flush()
-*/
 }
 
 // Accepts input from the player
 func (this *ProxyView) Loop() os.Error {
 	var tmp Move
+	fmt.Println("LOOP: WAITING FOR MOVE")
 	tmp = <-this.in
+	fmt.Println("LOOP: GOT FOR MOVE")
 	this.myMove = tmp.m
-	return nil	
+	return nil
 }
 

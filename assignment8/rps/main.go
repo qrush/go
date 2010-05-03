@@ -1,19 +1,24 @@
 package main
 
 import (
+	"flag"
 	"games"
-	"rps"
 	"os"
-	"fmt"
+	"rps"
+	"time"
 )
 
 func main() {
-	if len(os.Args) == 2 {
-		file, _ := os.Open(os.Args[1], os.O_RDWR, 0)
-		games.Play(os.Stdin, os.Stdout, file, file, rps.NewReferee())
-	} else if len(os.Args) == 1 {
-		games.Play(os.Stdin, os.Stdout, os.Stdin, os.Stdout, rps.NewReferee())
+	var player1, player2 games.View
+	if *games.PlayerA {
+		player1 = games.NewLocalView("A", os.Stdin, os.Stdout)
+		player2 = games.NewProxyView("B", flag.Arg(0), flag.Arg(1))
 	} else {
-		fmt.Printf("Invalid arguments. Usage: %s [terminal]", os.Args[0])
+		player1 = games.NewProxyView("A", flag.Arg(0), flag.Arg(1))
+		player2 = games.NewLocalView("B", os.Stdin, os.Stdout)
 	}
+	ref := rps.NewReferee()
+	for !ref.Turn(player1, player2) {
+	}
+	time.Sleep(.5 * 1e9)
 }

@@ -1,11 +1,11 @@
 package main
 
 import (
-	"os"
-	"games"
-	"ttt"
 	"flag"
+	"games"
+	"os"
 	"time"
+	"ttt"
 )
 
 func main() {
