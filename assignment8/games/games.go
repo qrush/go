@@ -19,7 +19,6 @@ const (
 	Second int64 = 1e9
 )
 
-
 type (
 	// outcome of a game; positive.
 	Outcome int
@@ -55,6 +54,7 @@ type (
 		out               *bufio.Writer
 	}
 
+	// Implements View for over a network
 	ProxyView struct {
 		gotMove		chan bool
 		name		string
@@ -65,6 +65,7 @@ type (
 		out		chan Move
 	}
 
+	// Represents a move, which we can't export without a struct
 	Move struct {
 		m	string
 	}
@@ -154,6 +155,7 @@ func Listen(ref Referee, v View, c chan string) {
 	c <- m
 }
 
+// Main game logic. Run until Turn is false, then sleep so connections can cut out
 func Play(p1, p2 View, ref Referee) {
 	for !ref.Turn(p1, p2) {}
 	time.Sleep(Second/2)

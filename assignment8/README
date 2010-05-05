@@ -1,4 +1,4 @@
-Tic Tac Toe & Rock Paper Scissors
+Tic Tac Toe & Rock Paper Scissors - Network Edition
 John Floren
 Nick Quaranto
 =================================
@@ -6,14 +6,35 @@ Nick Quaranto
 Contents:
 games/ - The games interface
 rps/ - Rock Paper Scissors
-ttt/ - Tick - Tack - Toe
+ttt/ - Tick - Tac - Toe
+
+==========================================
 
 To build, run
+
 % make all
 in this directory (top-level).
 
+==========================================
+
 To test, cd to either rps/ or ttt/ and run
-% make test
-That will start the program. The rock paper scissors game works best with a second terminal, but for simplicity 'make test' runs it all on one; it will therefore prompt for both A and B's moves at once. Type the first move, hit enter, then type the second move and hit enter.
+
+% make player1
+
+to play as player 1, and then
+
+% make player2
+
+to play as player 2. Or you can run either binary with the -a switch to set as player A (none for player b), with the following syntax:
+
+ttt [-a] [local host] [remote host]
+
+An example run:
+
+ttt -a localhost:1234 localhost:1235
+
+(on a different tty)
+
+ttt localhost:1235 localhost:1234
 
 The "q" key will exit either game at any time.
